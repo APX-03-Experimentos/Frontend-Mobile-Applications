@@ -21,7 +21,6 @@ class TokenService {
     await prefs.remove(_tokenKey);
   }
 
-  // Guardar información completa del usuario
   static Future<void> saveUserInfo({
     required String token,
     required int userId,
@@ -35,7 +34,6 @@ class TokenService {
     await prefs.setString(_userRoleKey, role);
   }
 
-  // Limpiar toda la información (logout)
   static Future<void> clearUserInfo() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
@@ -44,19 +42,21 @@ class TokenService {
     await prefs.remove(_userRoleKey);
   }
 
-  // Obtener rol del usuario
   static Future<String?> getUserRole() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_userRoleKey);
   }
 
-  // Verificar si es profesor
+  static Future<int?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_userIdKey);
+  }
+
   static Future<bool> isTeacher() async {
     final role = await getUserRole();
     return role == 'ROLE_TEACHER';
   }
 
-  // Verificar si es estudiante
   static Future<bool> isStudent() async {
     final role = await getUserRole();
     return role == 'ROLE_STUDENT';

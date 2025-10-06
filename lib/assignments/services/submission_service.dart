@@ -9,30 +9,27 @@ import '../../auth/services/token_service.dart';
 class SubmissionService extends BaseService{
   SubmissionService() : super('submissions');
 
-  //createSubmission
-  Future<Submission> createSubmission(int assignmentId,String content,String imageUrl) async {
+  Future<Submission> createSubmission(int assignmentId, String content) async {
     final token = await TokenService.getToken();
 
     final res = await http.post(
-        Uri.parse('${fullPath()}'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token'
-        },
-        body: jsonEncode({
-          'assignment_id': assignmentId,
-          'content': content,
-          'image_url': imageUrl
-        })
+      Uri.parse('${fullPath()}'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token'
+      },
+      body: jsonEncode({
+        'assignment_id': assignmentId,
+        'content': content,
+      }),
     );
 
-    if(res.statusCode==201){
+    if (res.statusCode == 201) {
       final data = jsonDecode(res.body);
       return Submission.fromJson(data);
-    } else{
+    } else {
       throw Exception('Error creating submission: ${res.statusCode} - ${res.body}');
     }
-
   }
 
   //updateSubmission

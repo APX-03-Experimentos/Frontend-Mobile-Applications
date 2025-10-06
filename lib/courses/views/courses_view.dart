@@ -2,23 +2,24 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:learnhive_mobile/courses/viewmodels/course_viewmodel.dart';
+import '../../assignments/viewmodels/assignment_viewmodel.dart';
 import '../model/course.dart';
+import 'course_details_view.dart';
 
-class CourseView extends StatefulWidget {
-  const CourseView({super.key});
+class CoursesView extends StatefulWidget {
+  const CoursesView({super.key});
 
   @override
-  State<CourseView> createState() => _CourseViewState();
+  State<CoursesView> createState() => _CoursesViewState();
 }
 
-class _CourseViewState extends State<CourseView> {
+class _CoursesViewState extends State<CoursesView> {
   final _titleController = TextEditingController();
   final _joinCodeController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    // Cargar cursos al iniciar
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CourseViewModel>().loadCourses();
     });
@@ -428,27 +429,10 @@ class _CourseViewState extends State<CourseView> {
   }
 
   void _showCourseDetails(Course course) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(course.title),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('ID: ${course.courseId}'),
-            Text('Profesor ID: ${course.teacherId}'),
-            Text('Código: ${course.key}'),
-            if (course.imageUrl.isNotEmpty) const SizedBox(height: 8),
-            if (course.imageUrl.isNotEmpty) Text('Imagen: ${course.imageUrl}'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar'),
-          ),
-        ],
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CourseDetailsView(course: course),
       ),
     );
   }

@@ -172,16 +172,14 @@ class AssignmentService extends BaseService{
     }
   }
 
-  // removeFileFromAssignment - CORREGIDO
   Future<void> removeFileFromAssignment(int assignmentId, String fileUrl) async {
     final token = await TokenService.getToken();
 
-    // Agregar query parameter fileUrl
     final uri = Uri.parse('${fullPath()}/$assignmentId/files')
         .replace(queryParameters: {'fileUrl': fileUrl});
 
     final res = await http.delete(
-      uri,  // ← URI con query parameter
+      uri,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token'

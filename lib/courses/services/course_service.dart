@@ -21,8 +21,7 @@ class CourseService extends BaseService {
           'Authorization': 'Bearer $token'
         },
         body: jsonEncode({
-          'title': title,  // ← Solo envía title
-          // 'imageUrl': imageUrl ← QUITA ESTO
+          'title': title,
         })
     );
 
@@ -70,7 +69,6 @@ class CourseService extends BaseService {
         }
     );
 
-    // Backend devuelve 204, no 200
     if (res.statusCode != 204) {
       throw Exception('Error deleting course: ${res.body}'); // ← ✅ Mensaje correcto
     }

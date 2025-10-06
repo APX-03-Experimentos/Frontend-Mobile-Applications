@@ -24,7 +24,6 @@ class CourseViewModel extends ChangeNotifier{
 
   bool get isTeacher => _isTeacher ?? true;
 
-  //createCourse
   Future<Course> createCourse(String title) async {
     _setLoading(true);
     try {
@@ -163,16 +162,16 @@ class CourseViewModel extends ChangeNotifier{
 
   Future<void> determineUserRole() async {
     try {
-      debugPrint('🔍 DEBUG: Determinando rol del usuario...');
+      debugPrint('DEBUG: Determinando rol del usuario...');
       final role = await TokenService.getUserRole();
-      debugPrint('🔍 DEBUG: Rol obtenido de TokenService: $role');
+      debugPrint('DEBUG: Rol obtenido de TokenService: $role');
 
       _isTeacher = await TokenService.isTeacher();
-      debugPrint('🔍 DEBUG: _isTeacher = $_isTeacher');
+      debugPrint('DEBUG: _isTeacher = $_isTeacher');
 
       notifyListeners();
     } catch (e) {
-      debugPrint('❌ DEBUG: Error determinando rol: $e');
+      debugPrint('DEBUG: Error determinando rol: $e');
       _isTeacher = true;
       notifyListeners();
     }
@@ -180,7 +179,7 @@ class CourseViewModel extends ChangeNotifier{
 
 // Cargar cursos según el rol
   Future<void> loadCourses() async {
-    // Si aún no se determinó el rol, determinarlo primero
+
     if (_isTeacher == null) {
       await determineUserRole();
     }

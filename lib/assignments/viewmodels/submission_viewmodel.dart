@@ -17,18 +17,18 @@ class SubmissionViewModel extends ChangeNotifier {
   String? get error => _error;
   List<Submission> get submissions => _submissions;
 
-  //createSubmission
-  Future<Submission> createSubmission(int assignmentId,String content,String imageUrl) async {
+  Future<Submission?> createSubmission(int assignmentId, String content) async {
     _setLoading(true);
     try {
-      _submission = await _submissionService.createSubmission(assignmentId,content,imageUrl);
+      _submission = await _submissionService.createSubmission(assignmentId, content);
       _error = null;
     } catch (e) {
       _error = e.toString();
+      _submission = null;
+    } finally {
+      _setLoading(false);
     }
-    _setLoading(false);
-    return _submission!;
-
+    return _submission;
   }
 
   //updateSubmission
@@ -58,7 +58,7 @@ class SubmissionViewModel extends ChangeNotifier {
     } catch (e) {
       _error = e.toString();
       _setLoading(false);
-      rethrow; // Propagar la excepción para que el llamador pueda manejarla
+      rethrow;
     }
 
   }
@@ -103,7 +103,6 @@ class SubmissionViewModel extends ChangeNotifier {
     }
     _setLoading(false);
     return _submissions;
-
   }
 
   //getSubmissionsByStudentId
