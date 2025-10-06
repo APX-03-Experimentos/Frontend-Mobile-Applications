@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:learnhive_mobile/auth/services/auth_service.dart';
 
+import '../../main.dart';
 import '../model/user.dart';
 import '../services/token_service.dart';
 
@@ -21,6 +22,7 @@ class AuthViewModel extends ChangeNotifier {
     try {
       _user = await _authService.signUp(username, password, role);
       _error = null;
+
     } catch (e) {
       _error = e.toString();
     }
@@ -35,7 +37,13 @@ class AuthViewModel extends ChangeNotifier {
 
       if (_user?.token != null) {
         await TokenService.saveToken(_user!.token!);
+
+        _navigateToCourses();
+      } else {
+
+        _error = "Error: No se recibió token del servidor";
       }
+
     } catch (e) {
       _error = e.toString();
     }
@@ -52,4 +60,17 @@ class AuthViewModel extends ChangeNotifier {
     await TokenService.clearToken();
     notifyListeners();
   }
+
+
+
+  void _navigateToCourses() {
+    if (_user != null) {
+      // Usar postFrameCallback para evitar errores de contexto
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        MyApp.navigatorKey.currentState?.pushReplacementNamed('/courses');
+      });
+    }
+  }
+
+
 }

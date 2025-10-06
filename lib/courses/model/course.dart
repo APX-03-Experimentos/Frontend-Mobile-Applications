@@ -10,7 +10,7 @@ class Course {
     required this.teacherId,
     required this.title,
     required this.imageUrl,
-    required this.key
+    required this.key,
   });
 
   factory Course.fromJson(Map<String, dynamic> json) {
@@ -20,6 +20,7 @@ class Course {
         title: json["title"] as String,
         imageUrl: json["imageUrl"] as String,
         key: json["key"] as String
+
     );
   }
 }
