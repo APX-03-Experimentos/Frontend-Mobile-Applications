@@ -2,6 +2,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:learnhive_mobile/courses/model/course.dart';
 
+import '../../auth/services/token_service.dart';
 import '../services/course_service.dart';
 
 class CourseViewModel extends ChangeNotifier{
@@ -13,11 +14,15 @@ class CourseViewModel extends ChangeNotifier{
   String? _error;
   List<Course> _courses = []; // ← Para listas de cursos
 
+  bool? _isTeacher;
+
 
   Course? get course => _course;
   bool get isLoading => _isLoading;
   String? get error => _error;
   List<Course> get courses => _courses;
+
+  bool get isTeacher => _isTeacher ?? true;
 
   //createCourse
   Future<Course> createCourse(String title) async {
@@ -149,22 +154,53 @@ class CourseViewModel extends ChangeNotifier{
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
   }
+
+
+
+  Future<void> determineUserRole() async {
+    try {
+      debugPrint('🔍 DEBUG: Determinando rol del usuario...');
+      final role = await TokenService.getUserRole();
+      debugPrint('🔍 DEBUG: Rol obtenido de TokenService: $role');
+
+      _isTeacher = await TokenService.isTeacher();
+      debugPrint('🔍 DEBUG: _isTeacher = $_isTeacher');
+
+      notifyListeners();
+    } catch (e) {
+      debugPrint('❌ DEBUG: Error determinando rol: $e');
+      _isTeacher = true;
+      notifyListeners();
+    }
+  }
+
+// Cargar cursos según el rol
+  Future<void> loadCourses() async {
+    // Si aún no se determinó el rol, determinarlo primero
+    if (_isTeacher == null) {
+      await determineUserRole();
+    }
+
+    _setLoading(true);
+    try {
+      if (_isTeacher!) {
+        _courses = await _courseService.getCoursesFromTeacher();
+      } else {
+        _courses = await _courseService.getCoursesFromStudent();
+      }
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+      _courses = [];
+    }
+    _setLoading(false);
+  }
+
+
 
 
 }

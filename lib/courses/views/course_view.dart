@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:learnhive_mobile/courses/viewmodels/course_viewmodel.dart';
-
 import '../model/course.dart';
 
 class CourseView extends StatefulWidget {
@@ -16,16 +15,12 @@ class _CourseViewState extends State<CourseView> {
   final _titleController = TextEditingController();
   final _joinCodeController = TextEditingController();
 
-  // Para controlar los diálogos
-  bool _showCreateDialog = false;
-  bool _showJoinDialog = false;
-
   @override
   void initState() {
     super.initState();
     // Cargar cursos al iniciar
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CourseViewModel>().getCoursesFromTeacher();
+      context.read<CourseViewModel>().loadCourses();
     });
   }
 
@@ -33,33 +28,38 @@ class _CourseViewState extends State<CourseView> {
   Widget build(BuildContext context) {
     final vm = context.watch<CourseViewModel>();
     final size = MediaQuery.of(context).size;
+    final isTeacher = vm.isTeacher;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mis Cursos'),
-        backgroundColor: Colors.blueAccent,
+        title: Text(isTeacher ? 'Mis Cursos (Profesor)' : 'Mis Cursos (Estudiante)'),
+        backgroundColor: isTeacher ? Colors.blueAccent : Colors.green,
         foregroundColor: Colors.white,
         elevation: 4,
         actions: [
-          // Botón para unirse a curso
-          IconButton(
-            icon: const Icon(Icons.group_add),
-            onPressed: () => _showJoinCourseDialog(vm),
-            tooltip: 'Unirse a curso',
-          ),
+          // Botón para unirse a curso - SOLO para estudiantes
+          if (!isTeacher)
+            IconButton(
+              icon: const Icon(Icons.group_add),
+              onPressed: () => _showJoinCourseDialog(vm),
+              tooltip: 'Unirse a curso',
+            ),
         ],
       ),
-      body: _buildBody(vm, size),
-      floatingActionButton: FloatingActionButton(
+      body: _buildBody(vm, size, isTeacher),
+      // Botón crear curso - SOLO para profesores
+      floatingActionButton: isTeacher
+          ? FloatingActionButton(
         onPressed: () => _showCreateCourseDialog(vm),
         backgroundColor: Colors.blueAccent,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
-      ),
+      )
+          : null,
     );
   }
 
-  Widget _buildBody(CourseViewModel vm, Size size) {
+  Widget _buildBody(CourseViewModel vm, Size size, bool isTeacher) {
     if (vm.isLoading && vm.courses.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -70,20 +70,18 @@ class _CourseViewState extends State<CourseView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header con estadísticas
-          _buildHeader(vm),
-
+          _buildHeader(vm, isTeacher),
           const SizedBox(height: 20),
-
           // Lista de cursos
           Expanded(
-            child: _buildCoursesList(vm, size),
+            child: _buildCoursesList(vm, size, isTeacher),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildHeader(CourseViewModel vm) {
+  Widget _buildHeader(CourseViewModel vm, bool isTeacher) {
     return Card(
       elevation: 2,
       child: Padding(
@@ -95,7 +93,7 @@ class _CourseViewState extends State<CourseView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Mis Cursos',
+                  isTeacher ? 'Mis Cursos (Profesor)' : 'Mis Cursos (Estudiante)',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -111,6 +109,25 @@ class _CourseViewState extends State<CourseView> {
                   ),
                 ),
               ],
+            ),
+            // Indicador de rol
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: isTeacher ? Colors.blue[50] : Colors.green[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isTeacher ? Colors.blue : Colors.green,
+                ),
+              ),
+              child: Text(
+                isTeacher ? 'Profesor' : 'Estudiante',
+                style: TextStyle(
+                  color: isTeacher ? Colors.blue[700] : Colors.green[700],
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
             if (vm.error != null)
               Container(
@@ -135,7 +152,7 @@ class _CourseViewState extends State<CourseView> {
     );
   }
 
-  Widget _buildCoursesList(CourseViewModel vm, Size size) {
+  Widget _buildCoursesList(CourseViewModel vm, Size size, bool isTeacher) {
     if (vm.courses.isEmpty) {
       return Center(
         child: Column(
@@ -148,7 +165,7 @@ class _CourseViewState extends State<CourseView> {
             ),
             const SizedBox(height: 16),
             Text(
-              'No tienes cursos aún',
+              isTeacher ? 'No tienes cursos creados' : 'No estás inscrito en ningún curso',
               style: TextStyle(
                 fontSize: 18,
                 color: Colors.grey[600],
@@ -156,7 +173,7 @@ class _CourseViewState extends State<CourseView> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Crea tu primer curso o únete a uno existente',
+              isTeacher ? 'Crea tu primer curso para comenzar' : 'Únete a un curso existente usando un código',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[500],
@@ -170,19 +187,19 @@ class _CourseViewState extends State<CourseView> {
 
     return RefreshIndicator(
       onRefresh: () async {
-        await vm.getCoursesFromTeacher();
+        await vm.loadCourses();
       },
       child: ListView.builder(
         itemCount: vm.courses.length,
         itemBuilder: (context, index) {
           final course = vm.courses[index];
-          return _buildCourseCard(course, vm, size);
+          return _buildCourseCard(course, vm, size, isTeacher);
         },
       ),
     );
   }
 
-  Widget _buildCourseCard(Course course, CourseViewModel vm, Size size) {
+  Widget _buildCourseCard(Course course, CourseViewModel vm, Size size, bool isTeacher) {
     return Card(
       elevation: 3,
       margin: const EdgeInsets.only(bottom: 12),
@@ -204,42 +221,44 @@ class _CourseViewState extends State<CourseView> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert),
-                  onSelected: (value) => _handleCourseMenu(value, course, vm),
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'view',
-                      child: Row(
-                        children: [
-                          Icon(Icons.visibility, size: 20),
-                          SizedBox(width: 8),
-                          Text('Ver detalles'),
-                        ],
+                // Menú de opciones - SOLO para profesores
+                if (isTeacher)
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert),
+                    onSelected: (value) => _handleCourseMenu(value, course, vm),
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'view',
+                        child: Row(
+                          children: [
+                            Icon(Icons.visibility, size: 20),
+                            SizedBox(width: 8),
+                            Text('Ver detalles'),
+                          ],
+                        ),
                       ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit, size: 20),
-                          SizedBox(width: 8),
-                          Text('Editar'),
-                        ],
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit, size: 20),
+                            SizedBox(width: 8),
+                            Text('Editar'),
+                          ],
+                        ),
                       ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete, size: 20, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('Eliminar', style: TextStyle(color: Colors.red)),
-                        ],
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, size: 20, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Eliminar', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
               ],
             ),
 
@@ -268,7 +287,6 @@ class _CourseViewState extends State<CourseView> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () {
-                      // Navegar a la vista de detalles del curso
                       _showCourseDetails(course);
                     },
                     style: OutlinedButton.styleFrom(
@@ -332,7 +350,6 @@ class _CourseViewState extends State<CourseView> {
                 await vm.createCourse(_titleController.text.trim());
                 _titleController.clear();
 
-                // Mostrar resultado
                 if (vm.error == null && vm.course != null) {
                   _showSuccessDialog('Curso creado exitosamente');
                 }
@@ -381,7 +398,6 @@ class _CourseViewState extends State<CourseView> {
                 await vm.joinCourse(_joinCodeController.text.trim());
                 _joinCodeController.clear();
 
-                // Mostrar resultado
                 if (vm.error == null && vm.course != null) {
                   _showSuccessDialog('Te has unido al curso exitosamente');
                 }
@@ -423,10 +439,8 @@ class _CourseViewState extends State<CourseView> {
             Text('ID: ${course.courseId}'),
             Text('Profesor ID: ${course.teacherId}'),
             Text('Código: ${course.key}'),
-            if (course.imageUrl.isNotEmpty)
-              const SizedBox(height: 8),
-            if (course.imageUrl.isNotEmpty)
-              Text('Imagen: ${course.imageUrl}'),
+            if (course.imageUrl.isNotEmpty) const SizedBox(height: 8),
+            if (course.imageUrl.isNotEmpty) Text('Imagen: ${course.imageUrl}'),
           ],
         ),
         actions: [
@@ -521,8 +535,6 @@ class _CourseViewState extends State<CourseView> {
   }
 
   void _copyJoinCode(String joinCode) {
-    // Aquí implementarías la copia al portapapeles
-    // Por ahora mostramos un mensaje
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Código copiado: $joinCode'),

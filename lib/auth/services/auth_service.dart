@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:learnhive_mobile/auth/services/token_service.dart';
 import 'package:learnhive_mobile/shared/services/base_service.dart';
 
 import '../model/user.dart';
@@ -20,7 +21,20 @@ class AuthService extends BaseService {
     );
 
     if (res.statusCode == 200) {
-      return User.fromJson(jsonDecode(res.body));
+      final user = User.fromJson(jsonDecode(res.body));
+
+      // Guardar información completa del usuario
+      if (user.token != null) {
+        await TokenService.saveUserInfo(
+          token: user.token!,
+          userId: user.id,
+          username: user.username,
+          role: user.role,
+        );
+      }
+
+      return user;
+
     } else if (res.statusCode == 500) {
       throw Exception('Usuario o contraseña incorrectos.');
     }
