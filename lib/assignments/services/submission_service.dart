@@ -310,5 +310,24 @@ class SubmissionService extends BaseService{
     }
   }
 
+  Future<List<String>> getFilesBySubmissionId (int submissionId) async {
+    final token = await TokenService.getToken();
+
+    final res = await http.get(
+      Uri.parse('${fullPath()}/$submissionId/files'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token'
+      },
+    );
+
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      return List<String>.from(data);
+    } else {
+      throw Exception('Error fetching files for submission: ${res.statusCode} - ${res.body}');
+    }
+  }
+
 
 }

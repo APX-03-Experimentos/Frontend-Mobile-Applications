@@ -207,6 +207,21 @@ class SubmissionViewModel extends ChangeNotifier {
     _setLoading(false);
   }
 
+  Future<List<String>> getFilesBySubmissionId (int submissionId) async {
+    _setLoading(true);
+    try {
+      final files = await _submissionService.getFilesBySubmissionId(submissionId);
+      _error = null;
+      _setLoading(false);
+      return files;
+    } catch (e) {
+      _error = e.toString();
+      _setLoading(false);
+      rethrow;
+    }
+  }
+
+
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();

@@ -1,10 +1,13 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:learnhive_mobile/assignments/model/assignment.dart';
 import 'package:learnhive_mobile/assignments/model/submission.dart';
+import 'package:learnhive_mobile/assignments/views/submission_details_view.dart';
 import 'package:learnhive_mobile/auth/services/token_service.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../viewmodels/assignment_viewmodel.dart';
 import '../viewmodels/submission_viewmodel.dart';
@@ -21,279 +24,169 @@ class AssignmentDetailsPage extends StatefulWidget {
 class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
   bool _isTeacher = false;
   int? _userId;
-
-  List<String> _assignmentFiles = []; // Lista de archivos
-  bool _isLoadingFiles = false; // Para mostrar loading
+  List<String> _files = [];
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initUserAndLoadSubmissions();
+      _loadFiles();
     });
   }
 
   //FILES SECTIONS
 
+// ======================= FILES SECTION =======================
 
-  // Método REAL para agregar archivos
-  Future<void> _addFilesToAssignment() async {
-    final ImagePicker picker = ImagePicker();
 
-    // Permitir seleccionar múltiples imágenes
-    final List<XFile>? selectedFiles = await picker.pickMultiImage(
-      maxWidth: 1024,
-      maxHeight: 1024,
-      imageQuality: 85,
-    );
 
-    if (selectedFiles != null && selectedFiles.isNotEmpty) {
+  Future<void> _loadFiles() async {
+    final vm = Provider.of<AssignmentViewModel>(context, listen: false);
+    try {
+      final files = await vm.getFilesByAssignmentId(widget.assignment.id);
       setState(() {
-        _isLoadingFiles = true;
+        _files = files;
       });
-
-      try {
-        final assignmentVm = Provider.of<AssignmentViewModel>(context, listen: false);
-
-        // Convertir XFile a MultipartFile
-        final List<http.MultipartFile> multipartFiles = [];
-        for (final file in selectedFiles) {
-          final bytes = await file.readAsBytes();
-          final multipartFile = http.MultipartFile.fromBytes(
-            'files', // ← Este nombre debe coincidir con lo que espera tu backend
-            bytes,
-            filename: file.name,
-          );
-          multipartFiles.add(multipartFile);
-        }
-
-        // ✅ Llamar a tu método REAL
-        final newFileUrls = await assignmentVm.addFilesToAssignment(
-            widget.assignment.id,
-            multipartFiles
-        );
-
-        // Actualizar la lista local
-        setState(() {
-          _assignmentFiles.addAll(newFileUrls);
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${selectedFiles.length} archivo(s) agregado(s)'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al agregar archivos: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      } finally {
-        setState(() {
-          _isLoadingFiles = false;
-        });
-      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cargar archivos: $e')),
+      );
     }
   }
 
-  // Método REAL para eliminar archivos
-  Future<void> _removeFileFromAssignment(String fileUrl) async {
-    final fileName = fileUrl.split('/').last;
+// 📤 SUBIR ARCHIVOS
+  Future<void> _addFilesToAssignment() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        allowMultiple: true,
+        withData: true,
+      );
 
-    final confirmed = await showDialog<bool>(
+      if (result == null || result.files.isEmpty) return;
+
+      final assignmentVm = Provider.of<AssignmentViewModel>(context, listen: false);
+      final List<http.MultipartFile> multipartFiles = result.files
+          .where((file) => file.bytes != null)
+          .map((file) => http.MultipartFile.fromBytes(
+        'files',
+        file.bytes!,
+        filename: file.name,
+      ))
+          .toList();
+
+      final uploadedUrls = await assignmentVm.addFilesToAssignment(
+        widget.assignment.id,
+        multipartFiles,
+      );
+
+      // ✅ Agregamos directamente los nuevos archivos sin recargar
+      setState(() {
+        _files.addAll(uploadedUrls);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Archivos subidos correctamente')),
+      );
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al subir archivos: $e')),
+      );
+    }
+  }
+
+// ❌ ELIMINAR ARCHIVO
+  Future<void> _removeFileFromAssignment(String fileUrl) async {
+    final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (_) => AlertDialog(
         title: const Text('Eliminar archivo'),
-        content: Text('¿Estás seguro de que quieres eliminar $fileName?'),
+        content: Text('¿Seguro que deseas eliminar este archivo?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Eliminar'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Eliminar')),
         ],
       ),
     );
 
-    if (confirmed == true) {
-      setState(() {
-        _isLoadingFiles = true;
-      });
+    if (confirm != true) return;
 
-      try {
-        final assignmentVm = Provider.of<AssignmentViewModel>(context, listen: false);
-
-        // ✅ Llamar a tu método REAL
-        await assignmentVm.removeFileFromAssignment(widget.assignment.id, fileUrl);
-
-        // Actualizar lista local
-        setState(() {
-          _assignmentFiles.remove(fileUrl);
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$fileName eliminado'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al eliminar archivo: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      } finally {
-        setState(() {
-          _isLoadingFiles = false;
-        });
-      }
+    try {
+      final vm = Provider.of<AssignmentViewModel>(context, listen: false);
+      await vm.removeFileFromAssignment(widget.assignment.id, fileUrl);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Archivo eliminado correctamente')),
+      );
+      await _loadFiles();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al eliminar archivo: $e')),
+      );
     }
   }
 
-  // Widget para mostrar icono según tipo de archivo
-  Widget _getFileIcon(String fileName) {
-    if (fileName.toLowerCase().endsWith('.pdf')) {
-      return const Icon(Icons.picture_as_pdf, color: Colors.red);
-    } else if (fileName.toLowerCase().endsWith('.doc') || fileName.toLowerCase().endsWith('.docx')) {
-      return const Icon(Icons.description, color: Colors.blue);
-    } else if (fileName.toLowerCase().endsWith('.jpg') ||
-        fileName.toLowerCase().endsWith('.jpeg') ||
-        fileName.toLowerCase().endsWith('.png')) {
-      return const Icon(Icons.image, color: Colors.green);
-    } else {
-      return const Icon(Icons.insert_drive_file, color: Colors.grey);
-    }
-  }
-
-  // Widget para la sección de archivos
+  // 📁 SECCIÓN DE ARCHIVOS (solo editable para profesores)
   Widget _buildFilesSection() {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Título y botón de agregar
+            // Título + botón de agregar (solo profesor)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Material del Assignment',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  'Archivos del assignment',
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                if (_isTeacher) // Solo profesores pueden agregar
+                if (_isTeacher) // 👈 solo si es profesor
                   IconButton(
-                    icon: const Icon(Icons.add, color: Colors.blue),
-                    onPressed: _isLoadingFiles ? null : _addFilesToAssignment,
-                    tooltip: 'Agregar archivos',
+                    icon: const Icon(Icons.add),
+                    onPressed: _addFilesToAssignment,
                   ),
               ],
             ),
+            const SizedBox(height: 10),
 
-            const SizedBox(height: 12),
-
-            // Lista de archivos
-            if (_isLoadingFiles)
-              const Center(child: CircularProgressIndicator())
-            else if (_assignmentFiles.isEmpty)
-              const Center(
-                child: Text(
-                  'No hay archivos disponibles',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              )
+            // Contenido de archivos
+            if (_files.isEmpty)
+              const Text('No hay archivos disponibles.')
             else
               Column(
-                children: _assignmentFiles.map((fileUrl) {
-                  final fileName = fileUrl.split('/').last;
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      leading: _getFileIcon(fileName),
-                      title: Text(
-                        fileName,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Text(
-                        fileUrl,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      trailing: _isTeacher
-                          ? IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _removeFileFromAssignment(fileUrl),
-                        tooltip: 'Eliminar archivo',
-                      )
-                          : null,
-                      onTap: () {
-                        // Al hacer tap, mostrar vista previa o descargar
-                        _showFilePreview(fileUrl, fileName);
-                      },
-                    ),
+                children: _files.map((url) {
+                  final name = url.split('/').last;
+                  return ListTile(
+                    leading: const Icon(Icons.insert_drive_file),
+                    title: Text(name),
+                    trailing: _isTeacher
+                        ? IconButton( // 👈 solo el profesor puede eliminar
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => _removeFileFromAssignment(url),
+                    )
+                        : null,
+                    onTap: () async {
+                      final uri = Uri.parse(url);
+
+                      try {
+                        // Intentar abrir directamente en navegador externo (Chrome, Safari, etc.)
+                        if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+                          throw 'No se pudo abrir el archivo.';
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error al abrir el archivo: $e')),
+                        );
+                      }
+                    },
                   );
                 }).toList(),
               ),
           ],
         ),
-      ),
-    );
-  }
-
-  // Método para mostrar vista previa del archivo
-  void _showFilePreview(String fileUrl, String fileName) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(fileName),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (fileUrl.toLowerCase().endsWith('.jpg') ||
-                  fileUrl.toLowerCase().endsWith('.jpeg') ||
-                  fileUrl.toLowerCase().endsWith('.png'))
-                Image.network(fileUrl, height: 200, fit: BoxFit.cover)
-              else
-                _getFileIcon(fileName),
-              const SizedBox(height: 16),
-              Text('URL: $fileUrl'),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // Aquí puedes implementar la descarga
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Descargando $fileName...'),
-                  backgroundColor: Colors.blue,
-                ),
-              );
-            },
-            child: const Text('Descargar'),
-          ),
-        ],
       ),
     );
   }
@@ -439,126 +332,119 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
   }
 
   Widget _buildSubmissionCard(Submission submission) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Imagen del submission
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: Colors.grey[100],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  submission.imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey[200],
-                      child: const Icon(
-                        Icons.note,
-                        size: 20,
-                        color: Colors.grey,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Content con icono
-                  Row(
-                    children: [
-                      const Icon(Icons.description, size: 14, color: Colors.grey),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          submission.content,
-                          style: const TextStyle(fontSize: 14),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  // Estado
-                  Row(
-                    children: [
-                      const Icon(Icons.info, size: 14, color: Colors.grey),
-                      const SizedBox(width: 4),
-                      Text(
-                        "Estado: ${submission.status}",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                  // Archivos si existen
-                  if (submission.fileUrls.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Wrap(
-                      spacing: 8,
-                      children: submission.fileUrls.map((url) {
-                        return InkWell(
-                          onTap: () {
-                            // Aquí puedes agregar la acción para ver el archivo
-                          },
-                          child: Chip(
-                            label: Text(url.split('/').last),
-                            backgroundColor: Colors.grey.shade200,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            // Score a la derecha (solo si está calificado)
-            if (submission.score > 0)
+    return InkWell(
+      onTap: () {
+        // Navega a la vista de detalles de la entrega
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SubmissionDetailsPage(submission: submission),
+          ),
+        );
+      },
+      child: Card(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Imagen del submission
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                width: 50,
+                height: 50,
                 decoration: BoxDecoration(
-                  color: _getScoreColor(submission.score),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.grey[100],
                 ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    submission.imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[200],
+                        child: const Icon(
+                          Icons.note,
+                          size: 20,
+                          color: Colors.grey,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.grade, size: 16, color: Colors.white),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${submission.score}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
+                    // Contenido con ícono
+                    Row(
+                      children: [
+                        const Icon(Icons.description, size: 14, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            submission.content,
+                            style: const TextStyle(fontSize: 14),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    // Estado
+                    Row(
+                      children: [
+                        const Icon(Icons.info, size: 14, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Text(
+                          "Estado: ${submission.status}",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-            // Botón de calificar para profesores
-            if (_isTeacher && submission.score == 0)
-              IconButton(
-                icon: const Icon(Icons.grade, color: Colors.orange),
-                onPressed: () => _showGradeDialog(submission),
-              ),
-          ],
+              // Score a la derecha (solo si está calificado)
+              if (submission.score > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getScoreColor(submission.score),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.grade, size: 16, color: Colors.white),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${submission.score}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              // Botón de calificar para profesores
+              if (_isTeacher && submission.score == 0)
+                IconButton(
+                  icon: const Icon(Icons.grade, color: Colors.orange),
+                  onPressed: () => _showGradeDialog(submission),
+                ),
+            ],
+          ),
         ),
       ),
     );

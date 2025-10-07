@@ -34,16 +34,4 @@ class Submission {
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'assignment_id': assignmentId,
-      'student_id': studentId,
-      'content': content,
-      'score': score,
-      'image_url': imageUrl,
-      'status': status,
-      'file_urls': fileUrls,
-    };
-  }
 }

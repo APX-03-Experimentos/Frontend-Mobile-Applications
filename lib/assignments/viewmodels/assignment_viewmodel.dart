@@ -17,6 +17,9 @@ class AssignmentViewModel extends ChangeNotifier{
   String? get error => _error;
   List<Assignment> get assignments => _assignments;
 
+  List<String> _files = [];
+  List<String> get files => _files;
+
   //createAssignment
   Future<Assignment?> createAssignment(String title,String description,int courseId,DateTime deadline,String imageUrl) async{
     _setLoading(true);
@@ -123,6 +126,20 @@ class AssignmentViewModel extends ChangeNotifier{
       _error = e.toString();
     }
     _setLoading(false);
+  }
+
+  Future<List<String>> getFilesByAssignmentId(int assignmentId) async {
+    _setLoading(true);
+    try {
+      final files = await _assignmentService.getFilesByAssignmentId(assignmentId);
+      _error = null;
+      _setLoading(false);
+      return files;
+    } catch (e) {
+      _error = e.toString();
+      _setLoading(false);
+      rethrow;
+    }
   }
 
 

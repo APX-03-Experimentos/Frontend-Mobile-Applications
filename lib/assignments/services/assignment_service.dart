@@ -193,4 +193,25 @@ class AssignmentService extends BaseService{
     }
   }
 
+  Future<List<String>> getFilesByAssignmentId(int assignmentId) async {
+    final token = await TokenService.getToken();
+
+    final res = await http.get(
+      Uri.parse('${fullPath()}/$assignmentId/files'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token'
+      },
+    );
+
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      return List<String>.from(data);
+    } else {
+      throw Exception('Error getting files for assignment: ${res.statusCode} - ${res.body}');
+    }
+  }
+
+
+
 }
