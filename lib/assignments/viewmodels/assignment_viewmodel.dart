@@ -18,7 +18,7 @@ class AssignmentViewModel extends ChangeNotifier{
   List<Assignment> get assignments => _assignments;
 
   //createAssignment
-  Future<Assignment> createAssignment(String title,String description,int courseId,DateTime deadline,String imageUrl) async{
+  Future<Assignment?> createAssignment(String title,String description,int courseId,DateTime deadline,String imageUrl) async{
     _setLoading(true);
     try {
       _assignment = await _assignmentService.createAssignment(title,description,courseId,deadline,imageUrl);
@@ -27,11 +27,11 @@ class AssignmentViewModel extends ChangeNotifier{
       _error = e.toString();
     }
     _setLoading(false);
-    return _assignment!;
+    return _assignment;
   }
 
   //updateAssignment
-  Future<Assignment> updateAssignment(int assignmentId, String title,String description,int courseId,DateTime deadline,String imageUrl) async{
+  Future<Assignment?> updateAssignment(int assignmentId, String title,String description,int courseId,DateTime deadline,String imageUrl) async{
     _setLoading(true);
     try {
       _assignment = await _assignmentService.updateAssignment(assignmentId,title,description,courseId,deadline,imageUrl);
@@ -40,7 +40,7 @@ class AssignmentViewModel extends ChangeNotifier{
       _error = e.toString();
     }
     _setLoading(false);
-    return _assignment!;
+    return _assignment;
   }
 
   //deleteAssignment
@@ -60,7 +60,7 @@ class AssignmentViewModel extends ChangeNotifier{
   }
 
   //getAssignmentById
-  Future<Assignment> getAssignmentById(int assignmentId) async{
+  Future<Assignment?> getAssignmentById(int assignmentId) async{
     _setLoading(true);
     try {
       _assignment = await _assignmentService.getAssignmentById(assignmentId);
@@ -69,7 +69,7 @@ class AssignmentViewModel extends ChangeNotifier{
       _error = e.toString();
     }
     _setLoading(false);
-    return _assignment!;
+    return _assignment;
   }
 
   //getAllAssignments

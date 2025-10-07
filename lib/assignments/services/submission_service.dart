@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:learnhive_mobile/assignments/model/submission.dart';
 import 'package:learnhive_mobile/shared/services/base_service.dart';
@@ -9,7 +10,7 @@ import '../../auth/services/token_service.dart';
 class SubmissionService extends BaseService{
   SubmissionService() : super('submissions');
 
-  Future<Submission> createSubmission(int assignmentId, String content) async {
+  Future<Submission> createSubmission(int assignmentId, String content, String imageUrl) async {
     final token = await TokenService.getToken();
 
     final res = await http.post(
@@ -19,8 +20,9 @@ class SubmissionService extends BaseService{
         'Authorization': 'Bearer $token'
       },
       body: jsonEncode({
-        'assignment_id': assignmentId,
+        'assignmentId': assignmentId,
         'content': content,
+        'imageUrl': imageUrl
       }),
     );
 
@@ -43,11 +45,11 @@ class SubmissionService extends BaseService{
           'Authorization': 'Bearer $token'
         },
         body: jsonEncode({
-          'assignment_id': assignmentId,
-          'student_id': studentId,
+          'assignmentId': assignmentId,
+          'studentId': studentId,
           'content': content,
           'score': score,
-          'image_url': imageUrl
+          'imageUrl': imageUrl
         })
     );
 
@@ -234,7 +236,9 @@ class SubmissionService extends BaseService{
   Future<Submission> gradeSubmission(int submissionId, int score) async {
     final token = await TokenService.getToken();
 
-    final res = await http.patch(
+    debugPrint('🌐 Calificando submission $submissionId con score: $score');
+
+    final res = await http.put(
         Uri.parse('${fullPath()}/$submissionId/grade'),
         headers: {
           'Content-Type': 'application/json',
@@ -245,13 +249,15 @@ class SubmissionService extends BaseService{
         })
     );
 
+    debugPrint('📡 Response status: ${res.statusCode}');
+    debugPrint('📡 Response body: ${res.body}');
+
     if(res.statusCode==200){
       final data = jsonDecode(res.body);
       return Submission.fromJson(data);
     } else{
       throw Exception('Error grading submission: ${res.statusCode} - ${res.body}');
     }
-
   }
 
   // addFilesToSubmission

@@ -17,10 +17,10 @@ class SubmissionViewModel extends ChangeNotifier {
   String? get error => _error;
   List<Submission> get submissions => _submissions;
 
-  Future<Submission?> createSubmission(int assignmentId, String content) async {
+  Future<Submission?> createSubmission(int assignmentId, String content, String imageUrl) async {
     _setLoading(true);
     try {
-      _submission = await _submissionService.createSubmission(assignmentId, content);
+      _submission = await _submissionService.createSubmission(assignmentId, content, imageUrl);
       _error = null;
     } catch (e) {
       _error = e.toString();
@@ -120,16 +120,24 @@ class SubmissionViewModel extends ChangeNotifier {
 
   }
 
-  //getSubmissionsByStudentIdAndAssignmentId
   Future<List<Submission>> getSubmissionsByStudentIdAndAssignmentId(int studentId, int assignmentId) async {
+
+
     _setLoading(true);
     try {
       _submissions = await _submissionService.getSubmissionsByStudentIdAndAssignmentId(studentId, assignmentId);
       _error = null;
+
+
+      // ✅ Asegurar que se notifique al UI
+      notifyListeners();
+
     } catch (e) {
       _error = e.toString();
+      notifyListeners(); // ← También notificar en caso de error
+    } finally {
+      _setLoading(false);
     }
-    _setLoading(false);
     return _submissions;
   }
 

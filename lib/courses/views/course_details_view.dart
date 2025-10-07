@@ -177,14 +177,70 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
 
   Widget _buildCourseInfo(Course course) {
     return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: Image.network(course.imageUrl, fit: BoxFit.cover),
+          // Imagen del curso - MÁS GRANDE Y ENCIMA
+          Container(
+            height: 180, // Más grande
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
+              color: Colors.grey[100],
+            ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
+              child: Image.network(
+                course.imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[200],
+                    child: const Icon(
+                      Icons.school,
+                      size: 50,
+                      color: Colors.grey,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          // Información del curso
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  course.title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Código del curso con icono
+                Row(
+                  children: [
+                    const Icon(Icons.vpn_key, size: 16, color: Colors.grey),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Código: ${course.key}",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -196,8 +252,53 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
       margin: const EdgeInsets.symmetric(vertical: 8),
       elevation: 2,
       child: ListTile(
-        title: Text(assignment.title),
-        subtitle: Text(assignment.description ?? ""),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6),
+            color: Colors.grey[100],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: Image.network(
+              assignment.imageUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(
+                  Icons.assignment_outlined,
+                  size: 20,
+                  color: Colors.grey,
+                );
+              },
+            ),
+          ),
+        ),
+        title: Text(
+          assignment.title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (assignment.description?.isNotEmpty == true)
+              Row(
+                children: [
+                  const Icon(Icons.description, size: 14, color: Colors.grey),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      assignment.description!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
         trailing: const Icon(Icons.chevron_right),
         onTap: () {
           Navigator.push(

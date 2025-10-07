@@ -24,13 +24,13 @@ class Submission {
   factory Submission.fromJson(Map<String, dynamic> json) {
     return Submission(
       id: json['id'] as int,
-      assignmentId: json['assignment_id'] as int,
-      studentId: json['student_id'] as int,
+      assignmentId: json['assignmentId'] as int,
+      studentId: json['studentId'] as int,
       content: json['content'] as String,
       score: json['score'] as int,
-      imageUrl: json['image_url'] ?? '',
+      imageUrl: json['imageUrl'] ?? '',
       status: json['status'] as String,
-      fileUrls: List<String>.from(json['file_urls'] ?? []),
+      fileUrls: List<String>.from(json['fileUrls'] ?? []),
     );
   }
 

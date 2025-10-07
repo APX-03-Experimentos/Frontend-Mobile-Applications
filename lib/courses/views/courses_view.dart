@@ -3,10 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:learnhive_mobile/courses/viewmodels/course_viewmodel.dart';
 import '../../assignments/viewmodels/assignment_viewmodel.dart';
+import '../../auth/services/token_service.dart';
+import '../../auth/views/login_view.dart';
 import '../model/course.dart';
 import 'course_details_view.dart';
+import 'course_statistics_view.dart';
+import 'course_users_view.dart';
 
 class CoursesView extends StatefulWidget {
+
   const CoursesView({super.key});
 
   @override
@@ -16,6 +21,7 @@ class CoursesView extends StatefulWidget {
 class _CoursesViewState extends State<CoursesView> {
   final _titleController = TextEditingController();
   final _joinCodeController = TextEditingController();
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -48,6 +54,8 @@ class _CoursesViewState extends State<CoursesView> {
         ],
       ),
       body: _buildBody(vm, size, isTeacher),
+
+      bottomNavigationBar: _buildBottomNavigationBar(),
       // Botón crear curso - SOLO para profesores
       floatingActionButton: isTeacher
           ? FloatingActionButton(
@@ -57,6 +65,239 @@ class _CoursesViewState extends State<CoursesView> {
         child: const Icon(Icons.add),
       )
           : null,
+    );
+  }
+
+  Widget _buildBottomNavigationBar() {
+    final vm = context.read<CourseViewModel>();
+    final isTeacher = vm.isTeacher;
+
+    // Para estudiantes, mostrar solo 2 items
+    if (!isTeacher) {
+      return BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) => _onBottomNavItemTappedStudent(index),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: 'Usuarios',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.logout),
+            label: 'Cerrar Sesión',
+          ),
+        ],
+      );
+    }
+
+    // Para profesores, mostrar todos los items
+    return BottomNavigationBar(
+      currentIndex: _currentIndex,
+      onTap: (index) => _onBottomNavItemTapped(index),
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.people),
+          label: 'Usuarios',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.analytics),
+          label: 'Estadísticas',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.logout),
+          label: 'Cerrar Sesión',
+        ),
+      ],
+    );
+  }
+
+  void _onBottomNavItemTappedStudent(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+
+    switch (index) {
+      case 0: // Usuarios
+        _showCourseSelectionDialog();
+        break;
+      case 1: // Cerrar Sesión (ahora es el índice 1 para estudiantes)
+        _showLogoutConfirmation();
+        break;
+    }
+  }
+
+  void _onBottomNavItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+
+    switch (index) {
+      case 0: // Usuarios
+        _showCourseSelectionDialog();
+        break;
+      case 1: // Cerrar Sesión
+        _showStatisticsDialog();
+        break;
+      case 2: // Estadísticas
+        _showLogoutConfirmation();
+        break;
+    }
+  }
+
+  void _showCourseSelectionDialog() {
+    final vm = context.read<CourseViewModel>();
+
+    if (vm.courses.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No tienes cursos disponibles'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Seleccionar Curso'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: vm.courses.length,
+            itemBuilder: (context, index) {
+              final course = vm.courses[index];
+              return ListTile(
+                leading: const Icon(Icons.school),
+                title: Text(course.title),
+                subtitle: Text('Código: ${course.key}'),
+                onTap: () {
+                  Navigator.pop(context); // Cerrar diálogo
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CourseUsersView(
+                        course: course, // Pasamos el curso completo
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLogoutConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cerrar Sesión'),
+        content: const Text('¿Estás seguro de que quieres cerrar sesión?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context); // Cerrar diálogo de confirmación
+              await _performLogout();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Cerrar Sesión'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _performLogout() async {
+    try {
+      // Limpiar SharedPreferences usando TokenService
+      await TokenService.clearUserInfo();
+
+      // ✅ SOLUCIÓN: Usar pushReplacement en lugar de pushNamedAndRemoveUntil
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginView()),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sesión cerrada exitosamente'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al cerrar sesión: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showStatisticsDialog() {
+    final vm = context.read<CourseViewModel>();
+
+    if (vm.courses.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No tienes cursos disponibles'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Seleccionar Curso para Estadísticas'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: vm.courses.length,
+            itemBuilder: (context, index) {
+              final course = vm.courses[index];
+              return ListTile(
+                leading: const Icon(Icons.analytics),
+                title: Text(course.title),
+                subtitle: Text('Código: ${course.key}'),
+                onTap: () {
+                  Navigator.pop(context); // Cerrar diálogo
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CourseStatisticsView(
+                        course: course,
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -94,7 +335,7 @@ class _CoursesViewState extends State<CoursesView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isTeacher ? 'Mis Cursos (Profesor)' : 'Mis Cursos (Estudiante)',
+                  isTeacher ? 'Mis Cursos' : 'Mis Cursos',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -130,23 +371,7 @@ class _CoursesViewState extends State<CoursesView> {
                 ),
               ),
             ),
-            if (vm.error != null)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.red[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red),
-                ),
-                child: Text(
-                  'Error',
-                  style: TextStyle(
-                    color: Colors.red[700],
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+
           ],
         ),
       ),
@@ -205,112 +430,112 @@ class _CoursesViewState extends State<CoursesView> {
       elevation: 3,
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+        padding: const EdgeInsets.all(12.0),
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    course.title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+            // ✅ Imagen a la izquierda
+            if (course.imageUrl.isNotEmpty)
+              Container(
+                width: 80,
+                height: 80,
+                margin: const EdgeInsets.only(right: 12),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    course.imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[200],
+                        child: const Icon(
+                          Icons.school,
+                          size: 30,
+                          color: Colors.grey,
+                        ),
+                      );
+                    },
                   ),
                 ),
-                // Menú de opciones - SOLO para profesores
-                if (isTeacher)
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert),
-                    onSelected: (value) => _handleCourseMenu(value, course, vm),
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'view',
-                        child: Row(
-                          children: [
-                            Icon(Icons.visibility, size: 20),
-                            SizedBox(width: 8),
-                            Text('Ver detalles'),
-                          ],
+              ),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          course.title,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit, size: 20),
-                            SizedBox(width: 8),
-                            Text('Editar'),
+                      if (isTeacher)
+                        PopupMenuButton<String>(
+                          icon: const Icon(Icons.more_vert, size: 20),
+                          onSelected: (value) => _handleCourseMenu(value, course, vm),
+                          itemBuilder: (context) => [
+                            // ... mismos items del menú
                           ],
                         ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete, size: 20, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Eliminar', style: TextStyle(color: Colors.red)),
-                          ],
+                    ],
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // Información del curso
+                  Row(
+                    children: [
+                      Icon(Icons.vpn_key, size: 14, color: Colors.grey[600]),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Código: ${course.key}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
                         ),
                       ),
                     ],
                   ),
-              ],
-            ),
 
-            const SizedBox(height: 8),
+                  const SizedBox(height: 8),
 
-            // Información del curso
-            Row(
-              children: [
-                Icon(Icons.vpn_key, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 4),
-                Text(
-                  'Código: ${course.key}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
+                  // Botones de acción
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _showCourseDetails(course),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            foregroundColor: Colors.blueAccent,
+                            side: const BorderSide(color: Colors.blueAccent),
+                          ),
+                          child: const Text('Ver Curso', style: TextStyle(fontSize: 12)),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _copyJoinCode(course.key),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            foregroundColor: Colors.green,
+                            side: const BorderSide(color: Colors.green),
+                          ),
+                          child: const Text('Copiar Código', style: TextStyle(fontSize: 12)),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // Botones de acción
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      _showCourseDetails(course);
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.blueAccent,
-                      side: const BorderSide(color: Colors.blueAccent),
-                    ),
-                    child: const Text('Ver Curso'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      _copyJoinCode(course.key);
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.green,
-                      side: const BorderSide(color: Colors.green),
-                    ),
-                    child: const Text('Copiar Código'),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

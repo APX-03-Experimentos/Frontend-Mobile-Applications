@@ -15,7 +15,7 @@ void main() {
       ChangeNotifierProvider(create: (_) => AuthViewModel()),
       ChangeNotifierProvider(create: (_) => CourseViewModel()),
       ChangeNotifierProvider(create: (_) => AssignmentViewModel()),
-      ChangeNotifierProvider(create: (_) => SubmissionViewModel()),
+      ChangeNotifierProvider(create: (_) => SubmissionViewModel())
     ],
     child: const MyApp(),
   ));

@@ -29,6 +29,7 @@ class CourseViewModel extends ChangeNotifier{
     try {
       _course = await _courseService.createCourse(title);
       _error = null;
+      await loadCourses();
     } catch (e) {
       _error = e.toString();
     }
@@ -42,6 +43,14 @@ class CourseViewModel extends ChangeNotifier{
     try {
       _course = await _courseService.updateCourse(title,imageUrl,id);
       _error = null;
+
+      // ✅ Actualizar en la lista local si existe
+      final index = _courses.indexWhere((c) => c.courseId == id.toString());
+      if (index != -1 && _course != null) {
+        _courses[index] = _course!;
+        notifyListeners(); // ← Notificar el cambio
+      }
+
     } catch (e) {
       _error = e.toString();
     }
@@ -55,6 +64,11 @@ class CourseViewModel extends ChangeNotifier{
     try {
       await _courseService.deleteCourse(id);
       _error = null;
+
+      // ✅ Remover de la lista local
+      _courses.removeWhere((c) => c.courseId == id);
+      notifyListeners(); // ← Notificar el cambio
+
     } catch (e) {
       _error = e.toString();
     }
@@ -67,6 +81,10 @@ class CourseViewModel extends ChangeNotifier{
     try {
       _course = await _courseService.joinCourse(key);
       _error = null;
+
+      // ✅ IMPORTANTE: Recargar la lista de cursos después de unirse
+      await loadCourses();
+
     } catch (e) {
       _error = e.toString();
     }
@@ -78,10 +96,15 @@ class CourseViewModel extends ChangeNotifier{
   Future<void> kickStudentFromCourse(int courseId, int studentId) async {
     _setLoading(true);
     try {
+      debugPrint('🎯 CourseViewModel.kickStudentFromCourse: courseId=$courseId, studentId=$studentId');
       await _courseService.kickStudentFromCourse(courseId, studentId);
       _error = null;
+      debugPrint('✅ Estudiante eliminado exitosamente');
+
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ Error en ViewModel: $e');
+      rethrow; // ← Esto es importante para que el error llegue al UI
     }
     _setLoading(false);
   }
@@ -160,44 +183,56 @@ class CourseViewModel extends ChangeNotifier{
 
 
 
+
+  // ✅ NUEVO MÉTODO: Forzar actualización del rol
+  Future<void> refreshUserRole() async {
+    _isTeacher = null; // ← Limpiar cache
+    await determineUserRole();
+  }
+
   Future<void> determineUserRole() async {
     try {
-      debugPrint('DEBUG: Determinando rol del usuario...');
+      debugPrint('🔄 Determinando rol del usuario...');
       final role = await TokenService.getUserRole();
-      debugPrint('DEBUG: Rol obtenido de TokenService: $role');
+      debugPrint('📋 Rol obtenido de TokenService: $role');
 
       _isTeacher = await TokenService.isTeacher();
-      debugPrint('DEBUG: _isTeacher = $_isTeacher');
+      debugPrint('🎯 _isTeacher determinado: $_isTeacher');
 
       notifyListeners();
     } catch (e) {
-      debugPrint('DEBUG: Error determinando rol: $e');
+      debugPrint('❌ Error determinando rol: $e');
       _isTeacher = true;
       notifyListeners();
     }
   }
 
-// Cargar cursos según el rol
   Future<void> loadCourses() async {
+    await refreshUserRole();
 
-    if (_isTeacher == null) {
-      await determineUserRole();
-    }
-
+    _error = null; // ✅ Limpia errores anteriores antes de empezar
     _setLoading(true);
+
     try {
       if (_isTeacher!) {
         _courses = await _courseService.getCoursesFromTeacher();
       } else {
         _courses = await _courseService.getCoursesFromStudent();
       }
-      _error = null;
+
+      // ⚠️ Si no hay cursos, no es error
+      if (_courses.isEmpty) {
+        debugPrint("ℹ️ No se encontraron cursos para el usuario actual.");
+      }
+
     } catch (e) {
-      _error = e.toString();
+      _error = e.toString(); // Solo guarda error real
       _courses = [];
+    } finally {
+      _setLoading(false);
     }
-    _setLoading(false);
   }
+
 
 
 

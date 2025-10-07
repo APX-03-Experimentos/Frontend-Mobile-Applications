@@ -94,21 +94,22 @@ class CourseService extends BaseService {
     }
   }
 
-  //kickStudentFromCourse
+  // En CourseService
   Future<void> kickStudentFromCourse(int courseId, int studentId) async {
     final token = await TokenService.getToken();
 
     final res = await http.delete(
-        Uri.parse('${fullPath()}/$courseId/student/$studentId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token'
-        }
+      Uri.parse('${fullPath()}/$courseId/students/$studentId'), // ← Verifica esta URL
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token'
+      },
     );
 
-    // Backend devuelve 204, no 200
-    if (res.statusCode != 204) {
-      throw Exception('Error kicking student: ${res.body}');
+    if (res.statusCode == 200 || res.statusCode == 204) {
+      return;
+    } else {
+      throw Exception('Error removing student from course: ${res.statusCode} - ${res.body}');
     }
   }
 
