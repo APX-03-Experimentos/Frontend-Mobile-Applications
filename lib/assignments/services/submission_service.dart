@@ -310,20 +310,24 @@ class SubmissionService extends BaseService{
     }
   }
 
-  Future<List<String>> getFilesBySubmissionId (int submissionId) async {
+  Future<List<String>> getFilesBySubmissionId(int submissionId) async {
     final token = await TokenService.getToken();
 
     final res = await http.get(
       Uri.parse('${fullPath()}/$submissionId/files'),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token'
+        'Authorization': 'Bearer $token',
       },
     );
 
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body);
       return List<String>.from(data);
+    } else if (res.statusCode == 404) {
+      // 👇 Si el backend devuelve 404 pero la entrega existe,
+      // devolvemos lista vacía sin lanzar error.
+      return [];
     } else {
       throw Exception('Error fetching files for submission: ${res.statusCode} - ${res.body}');
     }

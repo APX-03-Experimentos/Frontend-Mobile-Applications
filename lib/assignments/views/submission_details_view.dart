@@ -170,7 +170,7 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
                   return ListTile(
                     leading: const Icon(Icons.insert_drive_file),
                     title: Text(name),
-                    trailing: _canEditSubmission
+                    trailing: (_canEditSubmission && widget.submission.status == 'NOT_GRADED')
                         ? IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
                       onPressed: () => _removeFileFromSubmission(url),
@@ -236,11 +236,6 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Entrega de ${userService.getUserById(s.studentId) ?? 'Estudiante'}",
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
                 Row(
                   children: [
                     const Icon(Icons.info_outline, size: 16, color: Colors.grey),

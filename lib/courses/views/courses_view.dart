@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:learnhive_mobile/courses/viewmodels/course_viewmodel.dart';
 import '../../assignments/viewmodels/assignment_viewmodel.dart';
@@ -743,10 +744,13 @@ class _CoursesViewState extends State<CoursesView> {
     );
   }
 
-  void _copyJoinCode(String joinCode) {
+  void _copyJoinCode(String joinCode) async {
+    await Clipboard.setData(ClipboardData(text: joinCode)); // ✅ copia real al portapapeles
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Código copiado: $joinCode'),
+        content: Text('Código copiado al portapapeles: $joinCode'),
+        backgroundColor: Colors.green,
         duration: const Duration(seconds: 2),
       ),
     );
