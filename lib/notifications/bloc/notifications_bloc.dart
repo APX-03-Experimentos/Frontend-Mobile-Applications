@@ -37,4 +37,41 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     }
 
   }
+
+  Future<void> _onLoadNotificationByIdEvent(
+      LoadNotificationByIdEvent event,
+      Emitter<NotificationsState> emit
+      ) async {
+    emit(const NotificationsLoading());
+
+    try {
+      final notification = await _notificationService.getNotificationById(event.notificationId);
+
+      emit(NotificationsLoaded(notifications: [notification]));
+    } catch (e) {
+      emit(NotificationsError(errorMessage: e.toString()));
+    }
+
+  }
+
+  Future<void> _onLoadNotificationsByUserIdEvent(
+      LoadNotificationsByUserIdEvent event,
+      Emitter<NotificationsState> emit
+      ) async {
+    emit(const NotificationsLoading());
+
+    try {
+      final notifications = await _notificationService.getNotificationsByUserId(event.userId);
+
+      if(notifications.isEmpty){
+        emit(const NotificationsEmpty());
+      } else {
+        emit(NotificationsLoaded(notifications: notifications));
+      }
+    } catch (e) {
+      emit(NotificationsError(errorMessage: e.toString()));
+    }
+
+  }
+
 }
