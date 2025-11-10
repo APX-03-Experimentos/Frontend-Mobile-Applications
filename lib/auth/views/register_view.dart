@@ -159,12 +159,6 @@ class _RegisterViewState extends State<RegisterView> {
                           textAlign: TextAlign.center,
                           style: const TextStyle(color: Colors.red),
                         ),
-                      if (vm.user != null)
-                        Text(
-                          'Usuario creado: ${vm.user!.username}',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.green),
-                        ),
 
                       const SizedBox(height: 20),
 

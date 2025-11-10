@@ -1,4 +1,4 @@
-class Notification{
+class NotificationDataModel{
   final int id;
   final int userId;
   final String title;
@@ -9,7 +9,7 @@ class Notification{
   final int sourceCourseId;
   final int sourceAssignmentId;
 
-  Notification({
+  NotificationDataModel({
     required this.id,
     required this.userId,
     required this.title,
@@ -21,8 +21,8 @@ class Notification{
     required this.sourceAssignmentId
   });
 
-  factory Notification.fromJson(Map<String,dynamic> json){
-    return Notification(
+  factory NotificationDataModel.fromJson(Map<String,dynamic> json){
+    return NotificationDataModel(
       id: json["id"] as int,
       userId: json["userId"] as int,
       title: json["title"] as String,
@@ -34,6 +34,34 @@ class Notification{
       sourceAssignmentId: json["sourceAssignmentId"] as int
     );
 
+  }
+
+  NotificationDataModel copyWith({
+    int? id,
+    int? userId,
+    String? title,
+    String? message,
+    String? type,
+    bool? read,
+    DateTime? ocurredAt,
+    int? sourceCourseId,
+    int? sourceAssignmentId,
+  }) {
+    return NotificationDataModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
+      message: message ?? this.message,
+      type: type ?? this.type,
+      read: read ?? this.read,
+      ocurredAt: ocurredAt ?? this.ocurredAt,
+      sourceCourseId: sourceCourseId ?? this.sourceCourseId,
+      sourceAssignmentId: sourceAssignmentId ?? this.sourceAssignmentId,
+    );
+  }
+
+  bool getReadStatus(){
+    return read;
   }
 }
 

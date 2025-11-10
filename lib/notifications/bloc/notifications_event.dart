@@ -18,3 +18,13 @@ class MarkNotificationAsReadEvent extends NotificationsEvent {
   final int notificationId;
   MarkNotificationAsReadEvent(this.notificationId);
 }
+
+// 🔗 EVENTOS DE WEBSOCKET
+class ConnectWebSocketEvent extends NotificationsEvent {}
+
+class DisconnectWebSocketEvent extends NotificationsEvent {}
+
+class NewNotificationReceivedEvent extends NotificationsEvent {
+  final NotificationDataModel notification;
+  NewNotificationReceivedEvent(this.notification);
+}

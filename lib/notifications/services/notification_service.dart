@@ -10,7 +10,7 @@ class NotificationService extends BaseService{
   NotificationService() : super('notifications');
 
   //Get all notifications
-  Future<List<Notification>> getAllNotifications() async{
+  Future<List<NotificationDataModel>> getAllNotifications() async{
     final token = await TokenService.getToken();
     
     final response = await http.get(
@@ -23,14 +23,14 @@ class NotificationService extends BaseService{
 
     if(response.statusCode==200){
       final data = jsonDecode(response.body);
-      return (data as List).map((item)=>Notification.fromJson(item)).toList();
+      return (data as List).map((item)=>NotificationDataModel.fromJson(item)).toList();
     } else {
       throw Exception( 'Error fetching notifications: ${response.statusCode} - ${response.body}');
     }
   }
 
   //Get notification by ID
-  Future<Notification> getNotificationById(int notificationId) async{
+  Future<NotificationDataModel> getNotificationById(int notificationId) async{
     final token = await TokenService.getToken();
 
     final response = await http.get(
@@ -43,14 +43,14 @@ class NotificationService extends BaseService{
 
     if(response.statusCode==200){
       final data = jsonDecode(response.body);
-      return Notification.fromJson(data);
+      return NotificationDataModel.fromJson(data);
     } else{
       throw Exception('Error fetching notification: ${response.statusCode} - ${response.body}');
     }
   }
 
   //Get notifications by user ID
-  Future<List<Notification>> getNotificationsByUserId(int userId) async{
+  Future<List<NotificationDataModel>> getNotificationsByUserId(int userId) async{
     final token = await TokenService.getToken();
 
     final response = await http.get(
@@ -63,7 +63,7 @@ class NotificationService extends BaseService{
 
     if(response.statusCode==200){
       final data = jsonDecode(response.body);
-      return (data as List).map((item)=>Notification.fromJson(item)).toList();
+      return (data as List).map((item)=>NotificationDataModel.fromJson(item)).toList();
     } else{
       throw Exception('Error fetching notifications: ${response.statusCode} - ${response.body}');
     }
@@ -71,7 +71,7 @@ class NotificationService extends BaseService{
   }
 
   //Mark notification as read
-  Future<Notification> markNotificationAsRead(int notificationId) async{
+  Future<NotificationDataModel> markNotificationAsRead(int notificationId) async{
     final token = await TokenService.getToken();
 
     final response = await http.put(
@@ -84,7 +84,7 @@ class NotificationService extends BaseService{
 
     if(response.statusCode==200){
       final data = jsonDecode(response.body);
-      return Notification.fromJson(data);
+      return NotificationDataModel.fromJson(data);
     } else{
       throw Exception('Error marking notification as read: ${response.statusCode} - ${response.body}');
     }

@@ -1,11 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:learnhive_mobile/courses/viewmodels/course_viewmodel.dart';
 import '../../assignments/viewmodels/assignment_viewmodel.dart';
 import '../../auth/services/token_service.dart';
 import '../../auth/views/login_view.dart';
+import '../../notifications/bloc/notifications_bloc.dart';
 import '../model/course.dart';
 import 'course_details_view.dart';
 import 'course_statistics_view.dart';
@@ -29,6 +31,10 @@ class _CoursesViewState extends State<CoursesView> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CourseViewModel>().loadCourses();
+
+      // Cargar notificaciones (el WebSocket se conecta automáticamente en el BLoC)
+      context.read<NotificationsBloc>().add(LoadAllNotificationsEvent());
+
     });
   }
 
@@ -41,7 +47,7 @@ class _CoursesViewState extends State<CoursesView> {
     return Scaffold(
       appBar: AppBar(
         title: Text(isTeacher ? 'Mis Cursos (Profesor)' : 'Mis Cursos (Estudiante)'),
-        backgroundColor: isTeacher ? Colors.blueAccent : Colors.green,
+        backgroundColor: isTeacher ? Colors.blueAccent : Colors.lightBlueAccent,
         foregroundColor: Colors.white,
         elevation: 4,
         actions: [
@@ -73,41 +79,89 @@ class _CoursesViewState extends State<CoursesView> {
     final vm = context.read<CourseViewModel>();
     final isTeacher = vm.isTeacher;
 
-    // Para estudiantes, mostrar solo 2 items
-    if (!isTeacher) {
-      return BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => _onBottomNavItemTappedStudent(index),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Usuarios',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.logout),
-            label: 'Cerrar Sesión',
-          ),
-        ],
-      );
-    }
+    return BlocBuilder<NotificationsBloc, NotificationsState>(
+      builder: (context, state) {
+        int unreadCount = 0;
 
-    // Para profesores, mostrar todos los items
-    return BottomNavigationBar(
-      currentIndex: _currentIndex,
-      onTap: (index) => _onBottomNavItemTapped(index),
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.people),
-          label: 'Usuarios',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.analytics),
-          label: 'Estadísticas',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.logout),
-          label: 'Cerrar Sesión',
-        ),
+        // Calcular notificaciones no leídas
+        if (state is NotificationsLoaded) {
+          unreadCount = state.notifications.where((n) => !n.read).length;
+        }
+
+        // Para estudiantes
+        if (!isTeacher) {
+          return BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: (index) => _onBottomNavItemTappedStudent(index),
+            items: [
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.people),
+                label: 'Usuarios',
+              ),
+              BottomNavigationBarItem(
+                icon: _buildNotificationIcon(unreadCount),
+                label: 'Notificaciones',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.logout),
+                label: 'Cerrar Sesión',
+              ),
+            ],
+          );
+        }
+
+        // Para profesores
+        return BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) => _onBottomNavItemTapped(index),
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.people),
+              label: 'Usuarios',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.analytics),
+              label: 'Estadísticas',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.logout),
+              label: 'Cerrar Sesión',
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildNotificationIcon(int unreadCount) {
+    return Stack(
+      children: [
+        const Icon(Icons.notifications),
+        if (unreadCount > 0)
+          Positioned(
+            right: 0,
+            top: 0,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              constraints: const BoxConstraints(
+                minWidth: 16,
+                minHeight: 16,
+              ),
+              child: Text(
+                unreadCount > 9 ? '9+' : unreadCount.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -121,10 +175,17 @@ class _CoursesViewState extends State<CoursesView> {
       case 0: // Usuarios
         _showCourseSelectionDialog();
         break;
-      case 1: // Cerrar Sesión (ahora es el índice 1 para estudiantes)
+      case 1: // Notificaciones
+        _navigateToNotifications();
+        break;
+      case 2: // Cerrar Sesión (ahora es el índice 1 para estudiantes)
         _showLogoutConfirmation();
         break;
     }
+  }
+
+  void _navigateToNotifications() {
+    Navigator.pushNamed(context, '/notifications');
   }
 
   void _onBottomNavItemTapped(int index) {
@@ -357,16 +418,16 @@ class _CoursesViewState extends State<CoursesView> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: isTeacher ? Colors.blue[50] : Colors.green[50],
+                color: isTeacher ? Colors.blue[50] : Colors.lightBlueAccent[90],
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: isTeacher ? Colors.blue : Colors.green,
+                  color: isTeacher ? Colors.blue : Colors.lightBlueAccent,
                 ),
               ),
               child: Text(
                 isTeacher ? 'Profesor' : 'Estudiante',
                 style: TextStyle(
-                  color: isTeacher ? Colors.blue[700] : Colors.green[700],
+                  color: isTeacher ? Colors.blue[700] : Colors.lightBlueAccent[700],
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
@@ -477,14 +538,7 @@ class _CoursesViewState extends State<CoursesView> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (isTeacher)
-                        PopupMenuButton<String>(
-                          icon: const Icon(Icons.more_vert, size: 20),
-                          onSelected: (value) => _handleCourseMenu(value, course, vm),
-                          itemBuilder: (context) => [
-                            // ... mismos items del menú
-                          ],
-                        ),
+
                     ],
                   ),
 

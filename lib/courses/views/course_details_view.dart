@@ -55,31 +55,75 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
         title: const Text("Nueva Tarea"),
         content: SingleChildScrollView(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: titleController,
-                decoration: const InputDecoration(labelText: "Título"),
+                decoration: const InputDecoration(
+                  labelText: "Título",
+                  border: OutlineInputBorder(),
+                ),
               ),
+              const SizedBox(height: 16),
               TextField(
                 controller: descriptionController,
-                decoration: const InputDecoration(labelText: "Descripción"),
+                decoration: const InputDecoration(
+                  labelText: "Descripción",
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
               ),
+              const SizedBox(height: 16),
               TextField(
                 controller: deadlineController,
-                decoration: const InputDecoration(labelText: "Fecha límite (YYYY-MM-DD)"),
+                decoration: const InputDecoration(
+                  labelText: "Fecha y hora límite",
+                  border: OutlineInputBorder(),
+                  suffixIcon: Icon(Icons.calendar_today),
+                ),
                 readOnly: true,
                 onTap: () async {
+                  // Seleccionar fecha primero
                   final pickedDate = await showDatePicker(
                     context: context,
                     initialDate: DateTime.now(),
                     firstDate: DateTime.now(),
                     lastDate: DateTime(2100),
                   );
+
                   if (pickedDate != null) {
-                    selectedDate = pickedDate;
-                    deadlineController.text = pickedDate.toIso8601String().split('T').first;
+                    // Luego seleccionar hora
+                    final pickedTime = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.fromDateTime(DateTime.now().add(const Duration(hours: 1))),
+                    );
+
+                    if (pickedTime != null) {
+                      // Combinar fecha y hora
+                      selectedDate = DateTime(
+                        pickedDate.year,
+                        pickedDate.month,
+                        pickedDate.day,
+                        pickedTime.hour,
+                        pickedTime.minute,
+                      );
+
+                      // Formatear para mostrar
+                      deadlineController.text =
+                      '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year} '
+                          '${selectedDate!.hour.toString().padLeft(2, '0')}:'
+                          '${selectedDate!.minute.toString().padLeft(2, '0')}';
+                    }
                   }
                 },
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Haz clic para seleccionar fecha y hora",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
               ),
             ],
           ),
@@ -96,6 +140,14 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
                   selectedDate == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Completa todos los campos")),
+                );
+                return;
+              }
+
+              // Validar que la fecha no sea en el pasado
+              if (selectedDate!.isBefore(DateTime.now())) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("La fecha no puede ser en el pasado")),
                 );
                 return;
               }
