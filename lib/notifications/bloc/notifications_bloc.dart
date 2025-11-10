@@ -21,14 +21,14 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
       Emitter<NotificationsState> emit
       ) async {
     // Emitimos el estado de carga
-    emit(NotificationsLoading());
+    emit(const NotificationsLoading());
 
     try{
       final notifications = await _notificationService.getAllNotifications();
 
       // Verificamos si la lista está vacía
       if(notifications.isEmpty){
-        emit(NotificationsEmpty());
+        emit(const NotificationsEmpty());
       } else {
         emit(NotificationsLoaded(notifications: notifications));
       }
