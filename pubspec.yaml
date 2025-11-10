@@ -47,6 +47,8 @@ dependencies:
   image_picker: ^1.0.4
   file_picker: ^10.3.3  # Versión estable
   url_launcher: ^6.3.0
+  bloc: ^9.1.0
+  flutter_bloc: ^9.1.1
 
 #dev_dependencies:
 #  flutter_test:
