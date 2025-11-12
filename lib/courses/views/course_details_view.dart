@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:learnhive_mobile/assignments/model/assignment.dart';
+import 'package:learnhive_mobile/core/l10n/app_localizations.dart';
 
 import '../../assignments/viewmodels/assignment_viewmodel.dart';
 import '../../assignments/viewmodels/submission_viewmodel.dart';
 import '../../assignments/views/assignment_details_view.dart';
 import '../../auth/services/token_service.dart';
+import '../../core/providers/theme_provider.dart';
 import '../../courses/model/course.dart';
 
 class CourseDetailsView extends StatefulWidget {
@@ -41,7 +43,7 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
     await viewModel.getAssignmentsByCourseId(widget.course.courseId);
   }
 
-  Future<void> _showCreateAssignmentDialog() async {
+  Future<void> _showCreateAssignmentDialog(AppLocalizations l10n) async {
     final viewModel = context.read<AssignmentViewModel>();
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
@@ -52,38 +54,37 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Nueva Tarea"),
+        title: Text(l10n.newAssignment),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: titleController,
-                decoration: const InputDecoration(
-                  labelText: "Título",
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.title,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: descriptionController,
-                decoration: const InputDecoration(
-                  labelText: "Descripción",
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.description,
+                  border: const OutlineInputBorder(),
                 ),
                 maxLines: 3,
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: deadlineController,
-                decoration: const InputDecoration(
-                  labelText: "Fecha y hora límite",
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.calendar_today),
+                decoration: InputDecoration(
+                  labelText: l10n.deadline,
+                  border: const OutlineInputBorder(),
+                  suffixIcon: const Icon(Icons.calendar_today),
                 ),
                 readOnly: true,
                 onTap: () async {
-                  // Seleccionar fecha primero
                   final pickedDate = await showDatePicker(
                     context: context,
                     initialDate: DateTime.now(),
@@ -92,14 +93,12 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
                   );
 
                   if (pickedDate != null) {
-                    // Luego seleccionar hora
                     final pickedTime = await showTimePicker(
                       context: context,
                       initialTime: TimeOfDay.fromDateTime(DateTime.now().add(const Duration(hours: 1))),
                     );
 
                     if (pickedTime != null) {
-                      // Combinar fecha y hora
                       selectedDate = DateTime(
                         pickedDate.year,
                         pickedDate.month,
@@ -108,7 +107,6 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
                         pickedTime.minute,
                       );
 
-                      // Formatear para mostrar
                       deadlineController.text =
                       '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year} '
                           '${selectedDate!.hour.toString().padLeft(2, '0')}:'
@@ -119,7 +117,7 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
               ),
               const SizedBox(height: 8),
               Text(
-                "Haz clic para seleccionar fecha y hora",
+                l10n.clickToSelectDateTime,
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey[600],
@@ -131,7 +129,7 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancelar"),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -139,15 +137,14 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
                   descriptionController.text.isEmpty ||
                   selectedDate == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Completa todos los campos")),
+                  SnackBar(content: Text(l10n.completeAllFields)),
                 );
                 return;
               }
 
-              // Validar que la fecha no sea en el pasado
               if (selectedDate!.isBefore(DateTime.now())) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("La fecha no puede ser en el pasado")),
+                  SnackBar(content: Text(l10n.dateCannotBeInPast)),
                 );
                 return;
               }
@@ -168,7 +165,7 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
 
               Navigator.of(context, rootNavigator: true).pop();
             },
-            child: const Text("Guardar"),
+            child: Text(l10n.save),
           ),
         ],
       ),
@@ -182,60 +179,65 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
         final assignments = viewModel.assignments;
         final isLoading = viewModel.isLoading;
 
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(widget.course.title),
-            backgroundColor: _isTeacher ? Colors.blueAccent : Colors.green,
-            foregroundColor: Colors.white,
-            elevation: 4,
-          ),
+        return Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            final l10n = AppLocalizations.of(context);
 
-          floatingActionButton: _isTeacher
-              ? FloatingActionButton(
-            onPressed: _showCreateAssignmentDialog,
-            backgroundColor: Colors.blueAccent,
-            foregroundColor: Colors.white,
-            child: const Icon(Icons.add),
-          )
-              : null,
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(widget.course.title),
+                backgroundColor: _isTeacher ? Colors.blueAccent : Colors.lightBlueAccent,
+                foregroundColor: Colors.white,
+                elevation: 4,
+              ),
 
-          body: isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : RefreshIndicator(
-            onRefresh: _loadAssignments,
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _buildCourseInfo(widget.course),
-                const SizedBox(height: 24),
-                Text(
-                  "Assignments",
-                  style: Theme.of(context).textTheme.headlineSmall,
+              floatingActionButton: _isTeacher
+                  ? FloatingActionButton(
+                onPressed: () => _showCreateAssignmentDialog(l10n),
+                backgroundColor: Colors.blueAccent,
+                foregroundColor: Colors.white,
+                child: const Icon(Icons.add),
+              )
+                  : null,
+
+              body: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : RefreshIndicator(
+                onRefresh: _loadAssignments,
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    _buildCourseInfo(widget.course, l10n),
+                    const SizedBox(height: 24),
+                    Text(
+                      l10n.assignments,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 12),
+                    if (assignments.isEmpty)
+                      Center(
+                        child: Text(l10n.noAssignmentsForThisCourse),
+                      )
+                    else
+                      ...assignments.map((a) => _buildAssignmentCard(a, l10n)).toList(),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                if (assignments.isEmpty)
-                  const Center(
-                    child: Text("No hay assignments para este curso."),
-                  )
-                else
-                  ...assignments.map((a) => _buildAssignmentCard(a)).toList(),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
   }
 
-  Widget _buildCourseInfo(Course course) {
+  Widget _buildCourseInfo(Course course, AppLocalizations l10n) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Imagen del curso - MÁS GRANDE Y ENCIMA
           Container(
-            height: 180, // Más grande
+            height: 180,
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: const BorderRadius.vertical(
@@ -263,7 +265,6 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
               ),
             ),
           ),
-          // Información del curso
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -277,13 +278,12 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                // Código del curso con icono
                 Row(
                   children: [
                     const Icon(Icons.vpn_key, size: 16, color: Colors.grey),
                     const SizedBox(width: 8),
                     Text(
-                      "Código: ${course.key}",
+                      "${l10n.code}: ${course.key}",
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[700],
@@ -299,7 +299,7 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
     );
   }
 
-  Widget _buildAssignmentCard(Assignment assignment) {
+  Widget _buildAssignmentCard(Assignment assignment, AppLocalizations l10n) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       elevation: 2,
@@ -318,7 +318,7 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return const Icon(
-                  Icons.assignment_outlined,
+                  Icons.assignment,
                   size: 20,
                   color: Colors.grey,
                 );

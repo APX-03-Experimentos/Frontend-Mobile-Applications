@@ -1,11 +1,12 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
 import 'package:learnhive_mobile/assignments/model/assignment.dart';
 import 'package:learnhive_mobile/assignments/model/submission.dart';
 import 'package:learnhive_mobile/assignments/views/submission_details_view.dart';
 import 'package:learnhive_mobile/auth/services/token_service.dart';
+import 'package:learnhive_mobile/core/l10n/app_localizations.dart';
+import 'package:learnhive_mobile/core/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -35,12 +36,7 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
     });
   }
 
-  //FILES SECTIONS
-
-// ======================= FILES SECTION =======================
-
-
-
+  // ======================= FILES SECTION =======================
   Future<void> _loadFiles() async {
     final vm = Provider.of<AssignmentViewModel>(context, listen: false);
     try {
@@ -50,13 +46,12 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al cargar archivos: $e')),
+        SnackBar(content: Text('${AppLocalizations.of(context).errorLoadingFiles}: $e')),
       );
     }
   }
 
-// 📤 SUBIR ARCHIVOS
-  Future<void> _addFilesToAssignment() async {
+  Future<void> _addFilesToAssignment(AppLocalizations l10n) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         allowMultiple: true,
@@ -80,32 +75,30 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
         multipartFiles,
       );
 
-      // ✅ Agregamos directamente los nuevos archivos sin recargar
       setState(() {
         _files.addAll(uploadedUrls);
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Archivos subidos correctamente')),
+        SnackBar(content: Text(l10n.filesUploadedSuccessfully)),
       );
 
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al subir archivos: $e')),
+        SnackBar(content: Text('${l10n.errorUploadingFiles}: $e')),
       );
     }
   }
 
-// ❌ ELIMINAR ARCHIVO
-  Future<void> _removeFileFromAssignment(String fileUrl) async {
+  Future<void> _removeFileFromAssignment(String fileUrl, AppLocalizations l10n) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Eliminar archivo'),
-        content: Text('¿Seguro que deseas eliminar este archivo?'),
+        title: Text(l10n.deleteFile),
+        content: Text(l10n.deleteFileConfirmation),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Eliminar')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.delete)),
         ],
       ),
     );
@@ -116,18 +109,17 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
       final vm = Provider.of<AssignmentViewModel>(context, listen: false);
       await vm.removeFileFromAssignment(widget.assignment.id, fileUrl);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Archivo eliminado correctamente')),
+        SnackBar(content: Text(l10n.fileDeletedSuccessfully)),
       );
       await _loadFiles();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al eliminar archivo: $e')),
+        SnackBar(content: Text('${l10n.errorDeletingFile}: $e')),
       );
     }
   }
 
-  // 📁 SECCIÓN DE ARCHIVOS (solo editable para profesores)
-  Widget _buildFilesSection() {
+  Widget _buildFilesSection(AppLocalizations l10n) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
@@ -135,50 +127,46 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Título + botón de agregar (solo profesor)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Archivos del assignment',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                Text(
+                  l10n.assignmentFiles,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                if (_isTeacher) // 👈 solo si es profesor
+                if (_isTeacher)
                   IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: _addFilesToAssignment,
+                    icon: const Icon(Icons.file_upload_rounded),
+                    onPressed: () => _addFilesToAssignment(l10n),
                   ),
               ],
             ),
             const SizedBox(height: 10),
 
-            // Contenido de archivos
             if (_files.isEmpty)
-              const Text('No hay archivos disponibles.')
+              Text(l10n.noFilesAvailable)
             else
               Column(
                 children: _files.map((url) {
                   final name = url.split('/').last;
                   return ListTile(
-                    leading: const Icon(Icons.insert_drive_file),
+                    leading: const Icon(Icons.insert_drive_file_rounded),
                     title: Text(name),
                     trailing: _isTeacher
-                        ? IconButton( // 👈 solo el profesor puede eliminar
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _removeFileFromAssignment(url),
+                        ? IconButton(
+                      icon: const Icon(Icons.delete_rounded, color: Colors.red),
+                      onPressed: () => _removeFileFromAssignment(url, l10n),
                     )
                         : null,
                     onTap: () async {
                       final uri = Uri.parse(url);
-
                       try {
-                        // Intentar abrir directamente en navegador externo (Chrome, Safari, etc.)
                         if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-                          throw 'No se pudo abrir el archivo.';
+                          throw l10n.couldNotOpenFile;
                         }
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error al abrir el archivo: $e')),
+                          SnackBar(content: Text('${l10n.errorOpeningFile}: $e')),
                         );
                       }
                     },
@@ -191,10 +179,6 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
     );
   }
 
-
-
-  //FILES SECTIONS
-
   Future<void> _loadSubmissions() async {
     final vm = Provider.of<SubmissionViewModel>(context, listen: false);
     if (_isTeacher) {
@@ -206,16 +190,8 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
 
   Future<void> _initUserAndLoadSubmissions() async {
     try {
-      debugPrint('🔄 INICIANDO _initUserAndLoadSubmissions');
-
       final isTeacher = await TokenService.isTeacher();
       final userId = await TokenService.getUserId();
-
-      // ✅ DEBUG: Mostrar valores obtenidos
-      debugPrint('👤 DATOS DEL USUARIO:');
-      debugPrint('   - isTeacher: $isTeacher');
-      debugPrint('   - userId: $userId');
-      debugPrint('   - assignment.id: ${widget.assignment.id}');
 
       setState(() {
         _isTeacher = isTeacher;
@@ -224,27 +200,17 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
 
       final vm = Provider.of<SubmissionViewModel>(context, listen: false);
 
-      debugPrint('🎯 EJECUTANDO CARGA:');
       if (isTeacher) {
-        debugPrint('   - Modo: PROFESOR');
-        debugPrint('   - Llamando: getSubmissionsByAssignmentId(${widget.assignment.id})');
         await vm.getSubmissionsByAssignmentId(widget.assignment.id);
       } else if (userId != null) {
-        debugPrint('   - Modo: ESTUDIANTE');
-        debugPrint('   - Llamando: getSubmissionsByStudentIdAndAssignmentId($userId, ${widget.assignment.id})');
         await vm.getSubmissionsByStudentIdAndAssignmentId(userId, widget.assignment.id);
-      } else {
-        debugPrint('❌ ERROR: userId es NULL para estudiante');
       }
-
-      debugPrint('✅ CARGA COMPLETADA');
-
     } catch (e) {
       debugPrint('❌ ERROR en _initUserAndLoadSubmissions: $e');
     }
   }
 
-  Future<void> _showCreateSubmissionDialog() async {
+  Future<void> _showCreateSubmissionDialog(AppLocalizations l10n) async {
     final vm = Provider.of<SubmissionViewModel>(context, listen: false);
     final contentController = TextEditingController();
 
@@ -252,23 +218,23 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Nueva Entrega'),
+          title: Text(l10n.newSubmission),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: contentController,
-                decoration: const InputDecoration(labelText: 'Contenido'),
+                decoration: InputDecoration(labelText: l10n.content),
               )
             ],
           ),
           actions: [
             TextButton(
-              child: const Text('Cancelar'),
+              child: Text(l10n.cancel),
               onPressed: () => Navigator.pop(context),
             ),
             ElevatedButton(
-              child: const Text('Enviar'),
+              child: Text(l10n.submit),
               onPressed: () async {
                 await vm.createSubmission(
                   widget.assignment.id,
@@ -278,8 +244,8 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
                 Navigator.pop(context);
                 await _loadSubmissions();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Entrega creada exitosamente'),
+                  SnackBar(
+                    content: Text(l10n.submissionCreatedSuccessfully),
                     backgroundColor: Colors.green,
                   ),
                 );
@@ -291,7 +257,7 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
     );
   }
 
-  Future<void> _showGradeDialog(Submission submission) async {
+  Future<void> _showGradeDialog(Submission submission, AppLocalizations l10n) async {
     final vm = Provider.of<SubmissionViewModel>(context, listen: false);
     final scoreController = TextEditingController();
 
@@ -299,19 +265,19 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Calificar Entrega'),
+          title: Text(l10n.gradeSubmission),
           content: TextField(
             controller: scoreController,
-            decoration: const InputDecoration(labelText: 'Puntaje (0-20)'),
+            decoration: InputDecoration(labelText: l10n.scoreHint),
             keyboardType: TextInputType.number,
           ),
           actions: [
             TextButton(
-              child: const Text('Cancelar'),
+              child: Text(l10n.cancel),
               onPressed: () => Navigator.pop(context),
             ),
             ElevatedButton(
-              child: const Text('Guardar'),
+              child: Text(l10n.save),
               onPressed: () async {
                 final score = int.tryParse(scoreController.text) ?? 0;
                 await vm.gradeSubmission(submission.id, score);
@@ -319,7 +285,7 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
                 await _loadSubmissions();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Entrega calificada con $score puntos'),
+                    content: Text(l10n.submissionGradedWithScore(score)),
                     backgroundColor: Colors.blueAccent,
                   ),
                 );
@@ -331,10 +297,9 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
     );
   }
 
-  Widget _buildSubmissionCard(Submission submission) {
+  Widget _buildSubmissionCard(Submission submission, AppLocalizations l10n) {
     return InkWell(
       onTap: () {
-        // Navega a la vista de detalles de la entrega
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -349,7 +314,6 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Imagen del submission
               Container(
                 width: 50,
                 height: 50,
@@ -380,7 +344,6 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Contenido con ícono
                     Row(
                       children: [
                         const Icon(Icons.description, size: 14, color: Colors.grey),
@@ -396,13 +359,12 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    // Estado
                     Row(
                       children: [
                         const Icon(Icons.info, size: 14, color: Colors.grey),
                         const SizedBox(width: 4),
                         Text(
-                          "Estado: ${submission.status}",
+                          "${l10n.status}: ${submission.status}",
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],
@@ -413,7 +375,6 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
                   ],
                 ),
               ),
-              // Score a la derecha (solo si está calificado)
               if (submission.score > 0)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -437,11 +398,10 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
                     ],
                   ),
                 ),
-              // Botón de calificar para profesores
               if (_isTeacher && submission.score == 0)
                 IconButton(
                   icon: const Icon(Icons.grade, color: Colors.orange),
-                  onPressed: () => _showGradeDialog(submission),
+                  onPressed: () => _showGradeDialog(submission, l10n),
                 ),
             ],
           ),
@@ -457,16 +417,15 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
     return Colors.red;
   }
 
-  Widget _buildAssignmentInfo() {
+  Widget _buildAssignmentInfo(AppLocalizations l10n) {
     final a = widget.assignment;
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Imagen del assignment - MÁS GRANDE Y ENCIMA
           Container(
-            height: 180, // Más grande
+            height: 180,
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: const BorderRadius.vertical(
@@ -494,7 +453,6 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
               ),
             ),
           ),
-          // Información del assignment
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -529,10 +487,10 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                      const Icon(Icons.calendar_today_rounded, size: 16, color: Colors.grey),
                       const SizedBox(width: 8),
                       Text(
-                        "Vence: ${a.deadline!.day}/${a.deadline!.month}/${a.deadline!.year}",
+                        "${l10n.dueDate}: ${a.deadline!.day}/${a.deadline!.month}/${a.deadline!.year}",
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[700],
@@ -556,50 +514,51 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
         final submissions = vm.submissions;
         final isLoading = vm.isLoading;
 
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(widget.assignment.title),
-            backgroundColor: _isTeacher ? Colors.blueAccent : Colors.green,
-            foregroundColor: Colors.white,
-          ),
-          floatingActionButton: !_isTeacher
-              ? FloatingActionButton(
-            onPressed: _showCreateSubmissionDialog,
-            backgroundColor: Colors.green,
-            foregroundColor: Colors.white,
-            child: const Icon(Icons.add),
-          )
-              : null,
-          body: isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : RefreshIndicator(
-            onRefresh: _loadSubmissions,
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
+        return Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            final l10n = AppLocalizations.of(context);
 
-                _buildAssignmentInfo(),
-
-                const SizedBox(height: 16),
-
-                _buildFilesSection(),
-
-                const SizedBox(height: 16),
-
-                Text(
-                  "Entregas",
-                  style: Theme.of(context).textTheme.headlineSmall,
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(widget.assignment.title),
+                backgroundColor: _isTeacher ? Colors.blueAccent : Colors.lightBlueAccent,
+                foregroundColor: Colors.white,
+              ),
+              floatingActionButton: !_isTeacher
+                  ? FloatingActionButton(
+                onPressed: () => _showCreateSubmissionDialog(l10n),
+                backgroundColor: Colors.lightBlueAccent,
+                foregroundColor: Colors.white,
+                child: const Icon(Icons.add),
+              )
+                  : null,
+              body: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : RefreshIndicator(
+                onRefresh: _loadSubmissions,
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    _buildAssignmentInfo(l10n),
+                    const SizedBox(height: 16),
+                    _buildFilesSection(l10n),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.submissions,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 12),
+                    if (submissions.isEmpty)
+                      Center(
+                        child: Text(l10n.noSubmissionsRegistered),
+                      )
+                    else
+                      ...submissions.map((s) => _buildSubmissionCard(s, l10n)).toList(),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                if (submissions.isEmpty)
-                  const Center(
-                    child: Text("No hay entregas registradas."),
-                  )
-                else
-                  ...submissions.map(_buildSubmissionCard).toList(),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );

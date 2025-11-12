@@ -41,8 +41,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # flutter_localizations para multi idioma
+  flutter_localizations:
+    sdk: flutter
   provider: ^6.1.1
   http: ^0.13.6
+  #Shared_preferences para Theme Dark
   shared_preferences: ^2.2.2
   image_picker: ^1.0.4
   file_picker: ^10.3.3  # Versión estable
@@ -52,6 +56,10 @@ dependencies:
   flutter_bloc: ^9.1.1
   #WebSocketChannel
   web_socket_channel: ^3.0.0
+  #Para formating del language switcher_button:
+  intl: ^0.20.2
+
+
 
 #dev_dependencies:
 #  flutter_test:

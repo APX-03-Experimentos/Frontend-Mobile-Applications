@@ -4,10 +4,11 @@ import 'package:http/http.dart' as http;
 import 'package:learnhive_mobile/assignments/model/submission.dart';
 import 'package:learnhive_mobile/assignments/viewmodels/submission_viewmodel.dart';
 import 'package:learnhive_mobile/auth/services/token_service.dart';
+import 'package:learnhive_mobile/auth/services/user_service.dart';
+import 'package:learnhive_mobile/core/l10n/app_localizations.dart';
+import 'package:learnhive_mobile/core/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-import '../../auth/services/user_service.dart';
 
 class SubmissionDetailsPage extends StatefulWidget {
   final Submission submission;
@@ -26,7 +27,6 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
 
   @override
   void initState() {
-
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initUser();
@@ -36,7 +36,7 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
 
   Future<void> _initUser() async {
     final isTeacher = await TokenService.isTeacher();
-    final user = await userService.getCurrentUser(); // <-- asegúrate de que devuelve un User con id
+    final user = await userService.getCurrentUser();
 
     setState(() {
       _isTeacher = isTeacher;
@@ -49,7 +49,6 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
   }
 
   // =================== FILES SECTION ===================
-
   Future<void> _loadFiles() async {
     final vm = Provider.of<SubmissionViewModel>(context, listen: false);
     try {
@@ -57,12 +56,12 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
       setState(() => _files = files);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al cargar archivos: $e')),
+        SnackBar(content: Text('${AppLocalizations.of(context).errorLoadingFiles}: $e')),
       );
     }
   }
 
-  Future<void> _addFilesToSubmission() async {
+  Future<void> _addFilesToSubmission(AppLocalizations l10n) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         allowMultiple: true,
@@ -84,26 +83,26 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
       await vm.addFilesToSubmission(widget.submission.id, multipartFiles);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Archivos subidos correctamente')),
+        SnackBar(content: Text(l10n.filesUploadedSuccessfully)),
       );
 
       await _loadFiles();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al subir archivos: $e')),
+        SnackBar(content: Text('${l10n.errorUploadingFiles}: $e')),
       );
     }
   }
 
-  Future<void> _removeFileFromSubmission(String fileUrl) async {
+  Future<void> _removeFileFromSubmission(String fileUrl, AppLocalizations l10n) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Eliminar archivo'),
-        content: const Text('¿Seguro que deseas eliminar este archivo?'),
+        title: Text(l10n.deleteFile),
+        content: Text(l10n.deleteFileConfirmation),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Eliminar')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.delete)),
         ],
       ),
     );
@@ -114,17 +113,17 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
       final vm = Provider.of<SubmissionViewModel>(context, listen: false);
       await vm.removeFileFromSubmission(widget.submission.id, fileUrl);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Archivo eliminado correctamente')),
+        SnackBar(content: Text(l10n.fileDeletedSuccessfully)),
       );
       await _loadFiles();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al eliminar archivo: $e')),
+        SnackBar(content: Text('${l10n.errorDeletingFile}: $e')),
       );
     }
   }
 
-  Widget _buildFilesSection() {
+  Widget _buildFilesSection(AppLocalizations l10n) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
@@ -132,25 +131,24 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Archivos de la entrega',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                Text(
+                  l10n.submissionFiles,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 if (_canEditSubmission && widget.submission.status == 'NOT_GRADED')
                   IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: _addFilesToSubmission,
+                    icon: const Icon(Icons.attach_file_rounded),
+                    onPressed: () => _addFilesToSubmission(l10n),
                   )
                 else if (_canEditSubmission && widget.submission.status == 'GRADED')
-                  const Padding(
-                    padding: EdgeInsets.only(right: 8.0),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
                     child: Text(
-                      'Entrega calificada',
-                      style: TextStyle(
+                      l10n.submissionGraded,
+                      style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
@@ -162,7 +160,7 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
             const SizedBox(height: 10),
 
             if (_files.isEmpty)
-              const Text('No hay archivos subidos.')
+              Text(l10n.noFilesUploaded)
             else
               Column(
                 children: _files.map((url) {
@@ -173,20 +171,18 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
                     trailing: (_canEditSubmission && widget.submission.status == 'NOT_GRADED')
                         ? IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _removeFileFromSubmission(url),
+                      onPressed: () => _removeFileFromSubmission(url, l10n),
                     )
                         : null,
                     onTap: () async {
                       final uri = Uri.parse(url);
-
                       try {
-                        // Intentar abrir directamente en navegador externo (Chrome, Safari, etc.)
                         if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-                          throw 'No se pudo abrir el archivo.';
+                          throw l10n.couldNotOpenFile;
                         }
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error al abrir el archivo: $e')),
+                          SnackBar(content: Text('${l10n.errorOpeningFile}: $e')),
                         );
                       }
                     },
@@ -199,16 +195,13 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
     );
   }
 
-  // =================== SUBMISSION INFO ===================
-
-  Widget _buildSubmissionInfo() {
+  Widget _buildSubmissionInfo(AppLocalizations l10n) {
     final s = widget.submission;
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Imagen
           Container(
             height: 180,
             width: double.infinity,
@@ -230,7 +223,6 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
               ),
             ),
           ),
-          // Info básica
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -241,7 +233,7 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
                     const Icon(Icons.info_outline, size: 16, color: Colors.grey),
                     const SizedBox(width: 8),
                     Text(
-                      "Estado: ${s.status}",
+                      "${l10n.status}: ${s.status}",
                       style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                     ),
                   ],
@@ -253,7 +245,7 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
                       const Icon(Icons.grade, size: 16, color: Colors.grey),
                       const SizedBox(width: 8),
                       Text(
-                        "Puntaje: ${s.score}",
+                        "${l10n.score}: ${s.score}",
                         style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                       ),
                     ],
@@ -272,27 +264,31 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
     );
   }
 
-  // =================== BUILD ===================
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Detalles de la entrega"),
-        backgroundColor: _isTeacher ? Colors.blueAccent : Colors.green,
-        foregroundColor: Colors.white,
-      ),
-      body: RefreshIndicator(
-        onRefresh: _loadFiles,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _buildSubmissionInfo(),
-            const SizedBox(height: 16),
-            _buildFilesSection(),
-          ],
-        ),
-      ),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        final l10n = AppLocalizations.of(context);
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(l10n.submissionDetails),
+            backgroundColor: _isTeacher ? Colors.blueAccent : Colors.lightBlueAccent,
+            foregroundColor: Colors.white,
+          ),
+          body: RefreshIndicator(
+            onRefresh: _loadFiles,
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _buildSubmissionInfo(l10n),
+                const SizedBox(height: 16),
+                _buildFilesSection(l10n),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
