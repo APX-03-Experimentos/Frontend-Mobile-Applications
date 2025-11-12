@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:learnhive_mobile/courses/model/course.dart';
 import 'package:learnhive_mobile/assignments/viewmodels/assignment_viewmodel.dart';
 import '../../assignments/viewmodels/submission_viewmodel.dart';
+import '../../core/l10n/app_localizations.dart';
+import '../../core/providers/locale_provider.dart';
 
 class CourseStatisticsView extends StatefulWidget {
   final Course course;
@@ -21,6 +23,78 @@ class _CourseStatisticsViewState extends State<CourseStatisticsView> {
   late AssignmentViewModel _assignmentVm;
   late SubmissionViewModel _submissionVm;
   bool _isLoading = true;
+
+  @override
+  Widget build(BuildContext context) {
+    // ✅ ENVOLVER CON CONSUMER PARA LAS TRADUCCIONES
+    return Consumer<LocaleProvider>(
+      builder: (context, localeProvider, child) {
+        final appLocalizations = AppLocalizations.of(context);
+
+        if (_isLoading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final stats = _calculateStatistics();
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text('${appLocalizations.statistics} - ${widget.course.title}'), // ✅ TRADUCIDO
+            backgroundColor: Colors.purple,
+            foregroundColor: Colors.white,
+          ),
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ListView(
+              children: [
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  childAspectRatio: 1.5,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  children: [
+                    _buildStatisticsCard(
+                      appLocalizations.totalAssignments, // ✅ TRADUCIDO
+                      stats['totalAssignments'].toString(),
+                      Icons.assignment,
+                      Colors.blue,
+                    ),
+                    _buildStatisticsCard(
+                      appLocalizations.totalSubmissions, // ✅ TRADUCIDO
+                      stats['totalSubmissions'].toString(),
+                      Icons.summarize,
+                      Colors.green,
+                    ),
+                    _buildStatisticsCard(
+                      appLocalizations.graded, // ✅ TRADUCIDO
+                      stats['gradedSubmissions'].toString(),
+                      Icons.grade,
+                      Colors.orange,
+                    ),
+                    _buildStatisticsCard(
+                      appLocalizations.average, // ✅ TRADUCIDO
+                      '${stats['averageScore'].toStringAsFixed(1)}/20',
+                      Icons.trending_up,
+                      Colors.purple,
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+                _buildGradeDistribution(stats['gradeDistribution'], appLocalizations), // ✅ PASAR TRADUCCIONES
+                const SizedBox(height: 20),
+                _buildSubmissionsChart(stats['submissionsPerAssignment'], appLocalizations), // ✅ PASAR TRADUCCIONES
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -129,7 +203,7 @@ class _CourseStatisticsViewState extends State<CourseStatisticsView> {
     );
   }
 
-  Widget _buildGradeDistribution(Map<String, int> distribution) {
+  Widget _buildGradeDistribution(Map<String, int> distribution, AppLocalizations appLocalizations) {
     final total = distribution.values.reduce((a, b) => a + b);
 
     return Card(
@@ -139,11 +213,11 @@ class _CourseStatisticsViewState extends State<CourseStatisticsView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Distribución de Calificaciones',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+            Text(
+            appLocalizations.gradeDistribution, // ✅ TRADUCIDO
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 16),
@@ -185,7 +259,7 @@ class _CourseStatisticsViewState extends State<CourseStatisticsView> {
     }
   }
 
-  Widget _buildSubmissionsChart(Map<String, int> submissionsPerAssignment) {
+  Widget _buildSubmissionsChart(Map<String, int> submissionsPerAssignment, AppLocalizations appLocalizations) {
     return Card(
       elevation: 2,
       child: Padding(
@@ -193,24 +267,23 @@ class _CourseStatisticsViewState extends State<CourseStatisticsView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Submissions por Assignment',
-              style: TextStyle(
+            Text(
+              appLocalizations.submissionsPerAssignment, // ✅ TRADUCIDO
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 16),
             if (submissionsPerAssignment.isEmpty)
-              const Center(
+              Center(
                 child: Text(
-                  'No hay submissions',
-                  style: TextStyle(color: Colors.grey),
+                  appLocalizations.noSubmissions, // ✅ TRADUCIDO
+                  style: const TextStyle(color: Colors.grey),
                 ),
               )
             else
               ...submissionsPerAssignment.entries.map((entry) {
-                // ✅ CORREGIDO: Manejar caso cuando no hay submissions o todos son 0
                 final maxValue = submissionsPerAssignment.values.reduce((a, b) => a > b ? a : b);
                 final progressValue = maxValue > 0 ? entry.value / maxValue : 0.0;
 
@@ -252,74 +325,5 @@ class _CourseStatisticsViewState extends State<CourseStatisticsView> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
 
-    final stats = _calculateStatistics();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Estadísticas - ${widget.course.title}'),
-        backgroundColor: Colors.purple,
-        foregroundColor: Colors.white,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: [
-            // Tarjetas de resumen
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              childAspectRatio: 1.5,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              children: [
-                _buildStatisticsCard(
-                  'Total Assignments',
-                  stats['totalAssignments'].toString(),
-                  Icons.assignment,
-                  Colors.blue,
-                ),
-                _buildStatisticsCard(
-                  'Total Submissions',
-                  stats['totalSubmissions'].toString(),
-                  Icons.file_copy,
-                  Colors.green,
-                ),
-                _buildStatisticsCard(
-                  'Calificados',
-                  stats['gradedSubmissions'].toString(),
-                  Icons.grade,
-                  Colors.orange,
-                ),
-                _buildStatisticsCard(
-                  'Promedio',
-                  '${stats['averageScore'].toStringAsFixed(1)}/20', // ← Cambiado a /20
-                  Icons.analytics,
-                  Colors.purple,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // Distribución de calificaciones
-            _buildGradeDistribution(stats['gradeDistribution']),
-
-            const SizedBox(height: 20),
-
-            // Submissions por assignment
-            _buildSubmissionsChart(stats['submissionsPerAssignment']),
-          ],
-        ),
-      ),
-    );
-  }
 }
