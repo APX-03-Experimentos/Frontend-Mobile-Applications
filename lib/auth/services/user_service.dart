@@ -18,7 +18,7 @@ class UserService extends BaseService{
           'Authorization': 'Bearer $token'
         },
         body: jsonEncode({
-          'userName': userName,
+          'username': userName,
           'password': password
         }),
     );
