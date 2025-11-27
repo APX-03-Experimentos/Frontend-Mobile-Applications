@@ -15,7 +15,7 @@ class AuthService extends BaseService {
         Uri.parse('${fullPath()}/sign-in'),
         headers: { 'Content-Type': 'application/json' },
         body: jsonEncode({
-          'userName': username,
+          'username': username,
           'password': password,
         })
     );
@@ -45,10 +45,10 @@ class AuthService extends BaseService {
 
   Future<User> signUp(String username, String password, String role) async {
     final res = await http.post(
-        Uri.parse('${fullPath()}/sign-up'),
+        Uri.parse('${fullPath()}/sign-up/mobile'),
         headers: { 'Content-Type': 'application/json' },
         body: jsonEncode({
-          'userName': username,
+          'username': username,
           'password': password,
           'roles': [
             role
