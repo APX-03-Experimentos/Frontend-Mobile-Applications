@@ -18,25 +18,35 @@ import 'notifications/bloc/notifications_bloc.dart';
 import 'notifications/services/notification_service.dart';
 import 'notifications/views/notification_view.dart';
 
+final notificationService = NotificationService();
+final webSocketService = WebSocketService();
+final notificationsBloc = NotificationsBloc(notificationService, webSocketService);
+
 void main() {
-  runApp(MultiProvider(
-    providers: [
-      ChangeNotifierProvider(create: (_) => AuthViewModel()),
-      ChangeNotifierProvider(create: (_) => CourseViewModel()),
-      ChangeNotifierProvider(create: (_) => AssignmentViewModel()),
-      ChangeNotifierProvider(create: (_) => SubmissionViewModel()),
-      // Utilises
-      ChangeNotifierProvider(create: (_) => ThemeProvider()),
-      ChangeNotifierProvider(create: (_) => LocaleProvider()),
-      // BLoCs (BlocProvider)
-      BlocProvider<NotificationsBloc>(
-        create: (context) => NotificationsBloc(NotificationService(),WebSocketService()),
+  runApp(
+    MultiBlocProvider(
+      providers: [
+        // ✅ Usar BlocProvider.value con la instancia ya creada
+        BlocProvider.value(value: notificationsBloc),
+      ],
+      child: MultiProvider(
+        providers: [
+          // ViewModels
+          ChangeNotifierProvider(create: (_) => AuthViewModel()),
+          ChangeNotifierProvider(create: (_) => CourseViewModel()),
+          ChangeNotifierProvider(create: (_) => AssignmentViewModel()),
+          ChangeNotifierProvider(create: (_) => SubmissionViewModel()),
+          // Theme y Locale
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ChangeNotifierProvider(create: (_) => LocaleProvider()),
+        ],
+        child: const MyApp(),
       ),
-    ],
-    child: const MyApp(),
-  ));
+    ),
+  );
 }
 
+// MyApp simplificado
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -44,25 +54,25 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<ThemeProvider,LocaleProvider>(
+    return Consumer2<ThemeProvider, LocaleProvider>(
       builder: (context, themeProvider, localeProvider, child) {
         return MaterialApp(
           title: "LearnHive Mobile",
-          theme: ThemeData(primarySwatch: Colors.blue), // ← Tu theme actual (light)
-          darkTheme: ThemeData.dark(), // ← Dark theme por defecto
-          themeMode: themeProvider.themeMode, // ← Switch entre ambos
-          locale: localeProvider.locale, // ✅ Locale dinámico
+          navigatorKey: MyApp.navigatorKey,
+          theme: ThemeData(primarySwatch: Colors.blue),
+          darkTheme: ThemeData.dark(),
+          themeMode: themeProvider.themeMode,
+          locale: localeProvider.locale,
           localizationsDelegates: const [
-            AppLocalizations.delegate, // ✅ Tus traducciones
+            AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: const [
-            Locale('en'), // English
-            Locale('es'), // Spanish
+            Locale('en'),
+            Locale('es'),
           ],
-          navigatorKey: navigatorKey,
           home: const LoginView(),
           routes: {
             '/register': (_) => const RegisterView(),
