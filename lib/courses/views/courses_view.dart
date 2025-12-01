@@ -295,20 +295,46 @@ class _CoursesViewState extends State<CoursesView> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.logout),
-        content: Text(l10n.logoutConfirmation), // ✅ USAR LA TRADUCCIÓN
+        title: Text(
+          l10n.logout,
+          style: TextStyle(
+            color: Colors.blue[800], // Color azul para el título
+          ),
+        ),
+        content: Text(l10n.logoutConfirmation),
         actions: [
+          // Botón Cancelar - Mantenemos el estilo por defecto
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
+            child: Text(
+              l10n.cancel,
+              style: TextStyle(
+                color: Colors.grey[700], // Gris oscuro para cancelar
+              ),
+            ),
           ),
+          // Botón Salir - CON FONDO AZUL Y LETRA BLANCA
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
               await _performLogout(l10n);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(l10n.logout),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueAccent, // FONDO AZUL
+              foregroundColor: Colors.white, // LETRA BLANCA
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+            child: Text(
+              l10n.logout,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
           ),
         ],
       ),
