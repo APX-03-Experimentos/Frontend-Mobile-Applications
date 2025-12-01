@@ -40,6 +40,8 @@ class AppLocalizations {
       'app_language': 'App Language',
       'language_description': 'Change app language',
       'information': 'Information',
+      'version': 'Version',
+      'developed_by': 'Developed by',
 
       // NUEVAS PARA COURSE_STATISTICS_VIEW
       'statistics': 'Statistics',
@@ -199,6 +201,8 @@ class AppLocalizations {
       'app_language': 'Idioma de la App',
       'language_description': 'Cambiar el idioma de la aplicación',
       'information': 'Información',
+      'version': 'Versión',
+      'developed_by': 'Desarrollado por',
 
       // NUEVAS PARA COURSE_STATISTICS_VIEW
       'statistics': 'Estadísticas',
@@ -371,6 +375,8 @@ class AppLocalizations {
   String get appLanguage => _translate('app_language');
   String get languageDescription => _translate('language_description');
   String get information => _translate('information');
+  String get version => _translate('version');
+  String get developedBy => _translate('developed_by');
 
   // NUEVOS GETTERS PARA COURSE_STATISTICS_VIEW
   String get statistics => _translate('statistics');
