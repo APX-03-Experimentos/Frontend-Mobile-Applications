@@ -140,7 +140,8 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
                 ),
                 if (_canEditSubmission && widget.submission.status == 'NOT_GRADED')
                   IconButton(
-                    icon: const Icon(Icons.attach_file_rounded),
+                    // icon: const Icon(Icons.attach_file_rounded),
+                    icon: Text("Adjuntar"),
                     onPressed: () => _addFilesToSubmission(l10n),
                   )
                 else if (_canEditSubmission && widget.submission.status == 'GRADED')
@@ -166,11 +167,13 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
                 children: _files.map((url) {
                   final name = url.split('/').last;
                   return ListTile(
-                    leading: const Icon(Icons.insert_drive_file),
+                    // leading: const Icon(Icons.insert_drive_file),
+                    leading: Text("Archivo"),
                     title: Text(name),
                     trailing: (_canEditSubmission && widget.submission.status == 'NOT_GRADED')
                         ? IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
+                      // icon: const Icon(Icons.delete, color: Colors.red),
+                      icon: Text("Eliminar", style: TextStyle(color: Colors.red)),
                       onPressed: () => _removeFileFromSubmission(url, l10n),
                     )
                         : null,
@@ -217,7 +220,8 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     color: Colors.grey[200],
-                    child: const Icon(Icons.note, size: 50, color: Colors.grey),
+                    // child: const Icon(Icons.note, size: 50, color: Colors.grey),
+                    child: Center(child: Text("Error")),
                   );
                 },
               ),
@@ -230,7 +234,8 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.info_outline, size: 16, color: Colors.grey),
+                    // const Icon(Icons.info_outline, size: 16, color: Colors.grey),
+                    Text("Info: "),
                     const SizedBox(width: 8),
                     Text(
                       "${l10n.status}: ${s.status}",
@@ -242,7 +247,8 @@ class _SubmissionDetailsPageState extends State<SubmissionDetailsPage> {
                 if (s.score != null)
                   Row(
                     children: [
-                      const Icon(Icons.grade, size: 16, color: Colors.grey),
+                      // const Icon(Icons.grade, size: 16, color: Colors.grey),
+                      Text("Nota: "),
                       const SizedBox(width: 8),
                       Text(
                         "${l10n.score}: ${s.score}",

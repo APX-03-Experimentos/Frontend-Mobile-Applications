@@ -58,7 +58,8 @@ class _CoursesViewState extends State<CoursesView> {
             actions: [
               if (!isTeacher)
                 IconButton(
-                  icon: const Icon(Icons.group_add),
+                  // icon: const Icon(Icons.group_add),
+                  icon: Text("+", style: TextStyle(color: Colors.white)),
                   onPressed: () => _showJoinCourseDialog(vm, l10n),
                   tooltip: l10n.joinCourse,
                 ),
@@ -71,7 +72,8 @@ class _CoursesViewState extends State<CoursesView> {
             onPressed: () => _showCreateCourseDialog(vm, l10n),
             backgroundColor: Colors.blueAccent,
             foregroundColor: Colors.white,
-            child: const Icon(Icons.add),
+            // child: const Icon(Icons.add),
+            child: Text("+", style: TextStyle(color: Colors.white, fontSize: 22)),
           )
               : null,
         );
@@ -92,7 +94,6 @@ class _CoursesViewState extends State<CoursesView> {
           unreadCount = state.notifications.where((n) => !n.read).length;
         }
 
-        // Para estudiantes
         if (!isTeacher) {
           return BottomNavigationBar(
             currentIndex: _currentIndex,
@@ -102,26 +103,19 @@ class _CoursesViewState extends State<CoursesView> {
             unselectedItemColor: Colors.grey,
             items: [
               BottomNavigationBarItem(
-                icon: const Icon(Icons.groups_rounded),
+                // icon: const Icon(Icons.groups_rounded),
+                icon: Text(l10n.members),
                 label: l10n.members,
               ),
               BottomNavigationBarItem(
-                icon: _buildNotificationIcon(unreadCount),
-                label: l10n.notifications,
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.settings),
-                label: l10n.configuration,
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.logout),
+                // icon: const Icon(Icons.logout),
+                icon: Text(l10n.logout),
                 label: l10n.logout,
               ),
             ],
           );
         }
 
-        // Para profesores
         return BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: (index) => _onBottomNavItemTapped(index, l10n),
@@ -130,19 +124,18 @@ class _CoursesViewState extends State<CoursesView> {
           unselectedItemColor: Colors.grey,
           items: [
             BottomNavigationBarItem(
-              icon: const Icon(Icons.groups_rounded),
+              // icon: const Icon(Icons.groups_rounded),
+              icon: Text(l10n.members),
               label: l10n.members,
             ),
             BottomNavigationBarItem(
-              icon: const Icon(Icons.analytics),
+              // icon: const Icon(Icons.analytics),
+              icon: Text(l10n.statistics),
               label: l10n.statistics,
             ),
             BottomNavigationBarItem(
-              icon: const Icon(Icons.settings),
-              label: l10n.configuration,
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.logout_rounded),
+              // icon: const Icon(Icons.logout_rounded),
+              icon: Text(l10n.logout),
               label: l10n.logout,
             ),
           ],
@@ -151,71 +144,21 @@ class _CoursesViewState extends State<CoursesView> {
     );
   }
 
-  Widget _buildNotificationIcon(int unreadCount) {
-    return Stack(
-      children: [
-        Icon(
-          Icons.notifications,
-          color: _currentIndex == 1 ? Colors.blueAccent : Colors.grey,
-        ),
-        if (unreadCount > 0)
-          Positioned(
-            right: 0,
-            top: 0,
-            child: Container(
-              padding: const EdgeInsets.all(2),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              constraints: const BoxConstraints(
-                minWidth: 16,
-                minHeight: 16,
-              ),
-              child: Text(
-                unreadCount > 9 ? '9+' : unreadCount.toString(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
   void _onBottomNavItemTappedStudent(int index, AppLocalizations l10n) {
-    setState(() {
-      _currentIndex = index;
-    });
+    setState(() => _currentIndex = index);
 
     switch (index) {
-      case 0: // Miembros
+      case 0:
         _showCourseSelectionDialog(l10n);
         break;
-      case 1: // Notificaciones
-        _navigateToNotifications();
-        break;
-      case 2:
-        _navigateToSettings();
-        break;
-      case 3:
+      case 1:
         _showLogoutConfirmation(l10n);
         break;
     }
   }
 
-  void _navigateToNotifications() {
-    Navigator.pushNamed(context, '/notifications');
-  }
-
   void _onBottomNavItemTapped(int index, AppLocalizations l10n) {
-    setState(() {
-      _currentIndex = index;
-    });
+    setState(() => _currentIndex = index);
 
     switch (index) {
       case 0:
@@ -225,19 +168,9 @@ class _CoursesViewState extends State<CoursesView> {
         _showStatisticsDialog(l10n);
         break;
       case 2:
-        _navigateToSettings();
-        break;
-      case 3:
         _showLogoutConfirmation(l10n);
         break;
     }
-  }
-
-  void _navigateToSettings() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const SettingsView()),
-    );
   }
 
   void _showCourseSelectionDialog(AppLocalizations l10n) {
@@ -265,7 +198,7 @@ class _CoursesViewState extends State<CoursesView> {
             itemBuilder: (context, index) {
               final course = vm.courses[index];
               return ListTile(
-                leading: const Icon(Icons.book),
+                // leading: const Icon(Icons.book),
                 title: Text(course.title),
                 subtitle: Text('${l10n.code}: ${course.key}'),
                 onTap: () {
@@ -282,10 +215,7 @@ class _CoursesViewState extends State<CoursesView> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
         ],
       ),
     );
@@ -296,12 +226,9 @@ class _CoursesViewState extends State<CoursesView> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.logout),
-        content: Text(l10n.logoutConfirmation), // ✅ USAR LA TRADUCCIÓN
+        content: Text(l10n.logoutConfirmation),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
@@ -318,8 +245,8 @@ class _CoursesViewState extends State<CoursesView> {
   Future<void> _performLogout(AppLocalizations l10n) async {
     try {
       await TokenService.clearUserInfo();
-
       final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+
       if (themeProvider.isDarkMode) {
         await themeProvider.switchTheme();
       }
@@ -349,12 +276,8 @@ class _CoursesViewState extends State<CoursesView> {
     final vm = context.read<CourseViewModel>();
 
     if (vm.courses.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.noCoursesAvailable),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.noCoursesAvailable), backgroundColor: Colors.orange));
       return;
     }
 
@@ -370,7 +293,7 @@ class _CoursesViewState extends State<CoursesView> {
             itemBuilder: (context, index) {
               final course = vm.courses[index];
               return ListTile(
-                leading: const Icon(Icons.book),
+                // leading: const Icon(Icons.book),
                 title: Text(course.title),
                 subtitle: Text('${l10n.code}: ${course.key}'),
                 onTap: () {
@@ -387,10 +310,7 @@ class _CoursesViewState extends State<CoursesView> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
         ],
       ),
     );
@@ -398,7 +318,9 @@ class _CoursesViewState extends State<CoursesView> {
 
   Widget _buildBody(CourseViewModel vm, Size size, bool isTeacher, AppLocalizations l10n) {
     if (vm.isLoading && vm.courses.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
     }
 
     return Padding(
@@ -408,9 +330,7 @@ class _CoursesViewState extends State<CoursesView> {
         children: [
           _buildHeader(vm, isTeacher, l10n),
           const SizedBox(height: 20),
-          Expanded(
-            child: _buildCoursesList(vm, size, isTeacher, l10n),
-          ),
+          Expanded(child: _buildCoursesList(vm, size, isTeacher, l10n)),
         ],
       ),
     );
@@ -424,35 +344,23 @@ class _CoursesViewState extends State<CoursesView> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.myCourses,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.coursesCount(vm.courses.length),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
+            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(
+                l10n.myCourses,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[700]),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                l10n.coursesCount(vm.courses.length),
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              ),
+            ]),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: isTeacher ? Colors.blue[50] : Colors.lightBlueAccent[90],
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: isTeacher ? Colors.blue : Colors.lightBlueAccent,
-                ),
+                border: Border.all(color: isTeacher ? Colors.blue : Colors.lightBlueAccent),
               ),
               child: Text(
                 isTeacher ? l10n.professor : l10n.student,
@@ -475,26 +383,17 @@ class _CoursesViewState extends State<CoursesView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.school_outlined,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            // Icon(Icons.school_outlined, size: 64, color: Colors.grey[400]),
+
             const SizedBox(height: 16),
             Text(
               isTeacher ? l10n.noCoursesCreated : l10n.notEnrolledInAnyCourse,
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
             ),
             const SizedBox(height: 8),
             Text(
               isTeacher ? l10n.createFirstCourse : l10n.joinExistingCourse,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
               textAlign: TextAlign.center,
             ),
           ],
@@ -503,9 +402,7 @@ class _CoursesViewState extends State<CoursesView> {
     }
 
     return RefreshIndicator(
-      onRefresh: () async {
-        await vm.loadCourses();
-      },
+      onRefresh: () async => await vm.loadCourses(),
       child: ListView.builder(
         itemCount: vm.courses.length,
         itemBuilder: (context, index) {
@@ -522,98 +419,81 @@ class _CoursesViewState extends State<CoursesView> {
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (course.imageUrl.isNotEmpty)
-              Container(
-                width: 80,
-                height: 80,
-                margin: const EdgeInsets.only(right: 12),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    course.imageUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[200],
-                        child: const Icon(
-                          Icons.school,
-                          size: 30,
-                          color: Colors.grey,
-                        ),
-                      );
-                    },
-                  ),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          if (course.imageUrl.isNotEmpty)
+            Container(
+              width: 80,
+              height: 80,
+              margin: const EdgeInsets.only(right: 12),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  course.imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[200],
+                      // child: const Icon(Icons.school, size: 30, color: Colors.grey),
+                      child: Center(child: Text("Libro")),
+                    );
+                  },
                 ),
               ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                Expanded(
+                  child: Text(
+                    course.title,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ]),
+              const SizedBox(height: 6),
+              Row(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          course.title,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(Icons.vpn_key, size: 14, color: Colors.grey[600]),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${l10n.code}: ${course.key}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => _showCourseDetails(course),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            foregroundColor: Colors.blueAccent,
-                            side: const BorderSide(color: Colors.blueAccent),
-                          ),
-                          child: Text(l10n.viewCourse, style: const TextStyle(fontSize: 12)),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => _copyJoinCode(course.key, l10n),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            foregroundColor: Colors.green,
-                            side: const BorderSide(color: Colors.green),
-                          ),
-                          child: Text(l10n.copyCode, style: const TextStyle(fontSize: 12)),
-                        ),
-                      ),
-                    ],
+                  // Icon(Icons.vpn_key, size: 14, color: Colors.grey[600]),
+
+                  const SizedBox(width: 4),
+                  Text(
+                    '${l10n.code}: ${course.key}',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => _showCourseDetails(course),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        foregroundColor: Colors.blueAccent,
+                        side: const BorderSide(color: Colors.blueAccent),
+                      ),
+                      child: Text(l10n.viewCourse, style: const TextStyle(fontSize: 12)),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => _copyJoinCode(course.key, l10n),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        foregroundColor: Colors.green,
+                        side: const BorderSide(color: Colors.green),
+                      ),
+                      child: Text(l10n.copyCode, style: const TextStyle(fontSize: 12)),
+                    ),
+                  ),
+                ],
+              ),
+            ]),
+          ),
+        ]),
       ),
     );
   }
@@ -734,19 +614,12 @@ class _CoursesViewState extends State<CoursesView> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
           ElevatedButton(
             onPressed: () async {
               if (editController.text.trim().isNotEmpty) {
                 Navigator.pop(context);
-                await vm.updateCourse(
-                  editController.text.trim(),
-                  course.imageUrl,
-                  course.courseId,
-                );
+                await vm.updateCourse(editController.text.trim(), course.imageUrl, course.courseId);
 
                 if (vm.error == null) {
                   _showSuccessDialog(l10n.courseUpdatedSuccessfully);
@@ -767,10 +640,7 @@ class _CoursesViewState extends State<CoursesView> {
         title: Text(l10n.deleteCourse),
         content: Text(l10n.deleteCourseConfirmation(course.title)),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);

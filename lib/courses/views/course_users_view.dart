@@ -111,6 +111,8 @@ class _CourseUsersViewState extends State<CourseUsersView> {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: ListTile(
+        // COMENTADO: Avatar circular con ícono
+        /*
         leading: CircleAvatar(
           backgroundColor: isTeacher ? Colors.blueAccent : Colors.green,
           child: Text(
@@ -118,6 +120,7 @@ class _CourseUsersViewState extends State<CourseUsersView> {
             style: const TextStyle(color: Colors.white),
           ),
         ),
+        */
         title: Text(
           user.username,
           style: TextStyle(
@@ -126,8 +129,15 @@ class _CourseUsersViewState extends State<CourseUsersView> {
         ),
         subtitle: Text(isTeacher ? appLocalizations.professor : appLocalizations.student), // ✅ TRADUCIDO
         trailing: _isTeacher && !isTeacher
-            ? IconButton(
-          icon: const Icon(Icons.group_remove_rounded, color: Colors.red),
+            ? TextButton(
+          // COMENTADO: Icono de eliminar
+          /*
+                child: Icon(Icons.group_remove_rounded, color: Colors.red),
+                */
+          child: Text(
+            appLocalizations.removeStudent, // ✅ TRADUCIDO
+            style: const TextStyle(color: Colors.red),
+          ),
           onPressed: () async {
             final confirmed = await showDialog<bool>(
               context: context,
@@ -174,7 +184,10 @@ class _CourseUsersViewState extends State<CourseUsersView> {
               }
             }
           },
-          tooltip: appLocalizations.removeStudent, // ✅ TRADUCIDO
+          // COMENTADO: Tooltip
+          /*
+                tooltip: appLocalizations.removeStudent, // ✅ TRADUCIDO
+                */
         )
             : null,
       ),
@@ -190,10 +203,20 @@ class _CourseUsersViewState extends State<CourseUsersView> {
         backgroundColor: Colors.blueAccent,
         foregroundColor: Colors.white,
         actions: [
-          IconButton(
+          TextButton(
+            // COMENTADO: Icono de refresh
+            /*
             icon: const Icon(Icons.refresh),
+            */
+            child: Text(
+              appLocalizations.refresh, // ✅ TRADUCIDO
+              style: const TextStyle(color: Colors.white),
+            ),
             onPressed: _loadData,
+            // COMENTADO: Tooltip
+            /*
             tooltip: appLocalizations.refresh, // ✅ TRADUCIDO
+            */
           ),
         ],
       ),

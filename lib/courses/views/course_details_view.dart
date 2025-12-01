@@ -81,7 +81,10 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
                 decoration: InputDecoration(
                   labelText: l10n.deadline,
                   border: const OutlineInputBorder(),
+                  // COMENTADO: Icono del calendario
+                  /*
                   suffixIcon: const Icon(Icons.calendar_today),
+                  */
                 ),
                 readOnly: true,
                 onTap: () async {
@@ -196,7 +199,14 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
                 onPressed: () => _showCreateAssignmentDialog(l10n),
                 backgroundColor: Colors.blueAccent,
                 foregroundColor: Colors.white,
+                // COMENTADO: Icono del FAB
+                /*
                 child: const Icon(Icons.add),
+                */
+                child: Text(
+                  "Agregar", // Asumiendo que existe esta traducción
+                  style: const TextStyle(fontSize: 12),
+                ),
               )
                   : null,
 
@@ -255,10 +265,23 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     color: Colors.grey[200],
+                    // COMENTADO: Icono de fallback
+                    /*
                     child: const Icon(
                       Icons.school,
                       size: 50,
                       color: Colors.grey,
+                    ),
+                    */
+                    child: Center(
+                      child: Text(
+                        course.title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   );
                 },
@@ -280,8 +303,11 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
+                    // COMENTADO: Icono de la llave
+                    /*
                     const Icon(Icons.vpn_key, size: 16, color: Colors.grey),
                     const SizedBox(width: 8),
+                    */
                     Text(
                       "${l10n.code}: ${course.key}",
                       style: TextStyle(
@@ -304,6 +330,8 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
       margin: const EdgeInsets.symmetric(vertical: 8),
       elevation: 2,
       child: ListTile(
+        // COMENTADO: Leading con imagen/icono
+        /*
         leading: Container(
           width: 40,
           height: 40,
@@ -326,6 +354,7 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
             ),
           ),
         ),
+        */
         title: Text(
           assignment.title,
           style: const TextStyle(fontWeight: FontWeight.bold),
@@ -336,8 +365,11 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
             if (assignment.description?.isNotEmpty == true)
               Row(
                 children: [
+                  // COMENTADO: Icono de descripción
+                  /*
                   const Icon(Icons.description, size: 14, color: Colors.grey),
                   const SizedBox(width: 4),
+                  */
                   Expanded(
                     child: Text(
                       assignment.description!,
@@ -351,7 +383,17 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
               ),
           ],
         ),
+        // COMENTADO: Icono de flecha
+        /*
         trailing: const Icon(Icons.chevron_right),
+        */
+        trailing: Text(
+          "Ver mas", // Asumiendo que existe esta traducción
+          style: const TextStyle(
+            color: Colors.blue,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         onTap: () {
           Navigator.push(
             context,

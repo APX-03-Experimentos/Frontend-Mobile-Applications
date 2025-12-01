@@ -60,25 +60,29 @@ class _CourseStatisticsViewState extends State<CourseStatisticsView> {
                     _buildStatisticsCard(
                       appLocalizations.totalAssignments, // ✅ TRADUCIDO
                       stats['totalAssignments'].toString(),
-                      Icons.assignment,
+                      // COMENTADO: Icono
+                      // Icons.assignment,
                       Colors.blue,
                     ),
                     _buildStatisticsCard(
                       appLocalizations.totalSubmissions, // ✅ TRADUCIDO
                       stats['totalSubmissions'].toString(),
-                      Icons.summarize,
+                      // COMENTADO: Icono
+                      // Icons.summarize,
                       Colors.green,
                     ),
                     _buildStatisticsCard(
                       appLocalizations.graded, // ✅ TRADUCIDO
                       stats['gradedSubmissions'].toString(),
-                      Icons.grade,
+                      // COMENTADO: Icono
+                      // Icons.grade,
                       Colors.orange,
                     ),
                     _buildStatisticsCard(
                       appLocalizations.average, // ✅ TRADUCIDO
                       '${stats['averageScore'].toStringAsFixed(1)}/20',
-                      Icons.trending_up,
+                      // COMENTADO: Icono
+                      // Icons.trending_up,
                       Colors.purple,
                     ),
                   ],
@@ -160,13 +164,15 @@ class _CourseStatisticsViewState extends State<CourseStatisticsView> {
     };
   }
 
-  Widget _buildStatisticsCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatisticsCard(String title, String value, Color color) {
     return Card(
       elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
+            // COMENTADO: Contenedor del icono
+            /*
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
@@ -176,6 +182,7 @@ class _CourseStatisticsViewState extends State<CourseStatisticsView> {
               child: Icon(icon, color: color),
             ),
             const SizedBox(width: 12),
+            */
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -214,10 +221,10 @@ class _CourseStatisticsViewState extends State<CourseStatisticsView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-            appLocalizations.gradeDistribution, // ✅ TRADUCIDO
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+              appLocalizations.gradeDistribution, // ✅ TRADUCIDO
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 16),

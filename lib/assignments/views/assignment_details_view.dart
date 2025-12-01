@@ -82,7 +82,6 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.filesUploadedSuccessfully)),
       );
-
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${l10n.errorUploadingFiles}: $e')),
@@ -130,13 +129,11 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  l10n.assignmentFiles,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
+                Text(l10n.assignmentFiles, style: const TextStyle(fontWeight: FontWeight.bold)),
                 if (_isTeacher)
-                  IconButton(
-                    icon: const Icon(Icons.file_upload_rounded),
+                  TextButton(
+                    // icon: const Icon(Icons.file_upload_rounded),
+                    child: const Text("Subir archivo"),
                     onPressed: () => _addFilesToAssignment(l10n),
                   ),
               ],
@@ -150,11 +147,16 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
                 children: _files.map((url) {
                   final name = url.split('/').last;
                   return ListTile(
-                    leading: const Icon(Icons.insert_drive_file_rounded),
+                    // leading: const Icon(Icons.insert_drive_file_rounded),
+                    leading: const Text("Archivo"),
                     title: Text(name),
                     trailing: _isTeacher
-                        ? IconButton(
-                      icon: const Icon(Icons.delete_rounded, color: Colors.red),
+                        ? TextButton(
+                      // icon: const Icon(Icons.delete_rounded, color: Colors.red),
+                      child: const Text(
+                        "Eliminar",
+                        style: TextStyle(color: Colors.red),
+                      ),
                       onPressed: () => _removeFileFromAssignment(url, l10n),
                     )
                         : null,
@@ -206,7 +208,7 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
         await vm.getSubmissionsByStudentIdAndAssignmentId(userId, widget.assignment.id);
       }
     } catch (e) {
-      debugPrint('❌ ERROR en _initUserAndLoadSubmissions: $e');
+      debugPrint('ERROR en _initUserAndLoadSubmissions: $e');
     }
   }
 
@@ -229,10 +231,7 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
             ],
           ),
           actions: [
-            TextButton(
-              child: Text(l10n.cancel),
-              onPressed: () => Navigator.pop(context),
-            ),
+            TextButton(child: Text(l10n.cancel), onPressed: () => Navigator.pop(context)),
             ElevatedButton(
               child: Text(l10n.submit),
               onPressed: () async {
@@ -272,10 +271,7 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
             keyboardType: TextInputType.number,
           ),
           actions: [
-            TextButton(
-              child: Text(l10n.cancel),
-              onPressed: () => Navigator.pop(context),
-            ),
+            TextButton(child: Text(l10n.cancel), onPressed: () => Navigator.pop(context)),
             ElevatedButton(
               child: Text(l10n.save),
               onPressed: () async {
@@ -314,6 +310,7 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Imagen
               Container(
                 width: 50,
                 height: 50,
@@ -329,25 +326,24 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         color: Colors.grey[200],
-                        child: const Icon(
-                          Icons.note,
-                          size: 20,
-                          color: Colors.grey,
-                        ),
+                        // child: const Icon(Icons.note, size: 20, color: Colors.grey),
+                        child: const Center(child: Text("Sin imagen")),
                       );
                     },
                   ),
                 ),
               ),
+
               const SizedBox(width: 12),
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.description, size: 14, color: Colors.grey),
-                        const SizedBox(width: 4),
+                        // const Icon(Icons.description, size: 14, color: Colors.grey),
+                        const Text("Descripción: "),
                         Expanded(
                           child: Text(
                             submission.content,
@@ -358,23 +354,23 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 4),
+
                     Row(
                       children: [
-                        const Icon(Icons.info, size: 14, color: Colors.grey),
-                        const SizedBox(width: 4),
+                        // const Icon(Icons.info, size: 14, color: Colors.grey),
+                        const Text("Estado: "),
                         Text(
-                          "${l10n.status}: ${submission.status}",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
+                          submission.status,
+                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
+
               if (submission.score > 0)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -382,25 +378,16 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
                     color: _getScoreColor(submission.score),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.grade, size: 16, color: Colors.white),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${submission.score}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    '${submission.score}',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                 ),
+
               if (_isTeacher && submission.score == 0)
-                IconButton(
-                  icon: const Icon(Icons.grade, color: Colors.orange),
+                TextButton(
+                  // icon: const Icon(Icons.grade, color: Colors.orange),
+                  child: const Text("Calificar"),
                   onPressed: () => _showGradeDialog(submission, l10n),
                 ),
             ],
@@ -412,13 +399,14 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
 
   Color _getScoreColor(int score) {
     if (score >= 17) return Colors.green;
-    if (score <18 && score>13) return Colors.yellowAccent.shade700;
-    if (score <14) return Colors.redAccent;
+    if (score < 18 && score > 13) return Colors.yellowAccent.shade700;
+    if (score < 14) return Colors.redAccent;
     return Colors.red;
   }
 
   Widget _buildAssignmentInfo(AppLocalizations l10n) {
     final a = widget.assignment;
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
@@ -428,31 +416,25 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
             height: 180,
             width: double.infinity,
             decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
               color: Colors.grey[100],
             ),
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
               child: Image.network(
                 a.imageUrl,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     color: Colors.grey[200],
-                    child: const Icon(
-                      Icons.assignment,
-                      size: 50,
-                      color: Colors.grey,
-                    ),
+                    // child: const Icon(Icons.assignment, size: 50, color: Colors.grey),
+                    child: const Center(child: Text("Sin imagen")),
                   );
                 },
               ),
             ),
           ),
+
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -460,41 +442,35 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
               children: [
                 Text(
                   a.title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
+
                 const SizedBox(height: 8),
+
                 if (a.description?.isNotEmpty == true)
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.description, size: 16, color: Colors.grey),
-                      const SizedBox(width: 8),
+                      // const Icon(Icons.description, size: 16, color: Colors.grey),
+                      const Text("Descripción: "),
                       Expanded(
                         child: Text(
                           a.description!,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[700],
-                          ),
+                          style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                         ),
                       ),
                     ],
                   ),
+
                 if (a.deadline != null) ...[
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.calendar_today_rounded, size: 16, color: Colors.grey),
-                      const SizedBox(width: 8),
+                      // const Icon(Icons.calendar_today_rounded, size: 16, color: Colors.grey),
+                      const Text("Fecha límite: "),
                       Text(
-                        "${l10n.dueDate}: ${a.deadline!.day}/${a.deadline!.month}/${a.deadline!.year}",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[700],
-                        ),
+                        "${a.deadline!.day}/${a.deadline!.month}/${a.deadline!.year}",
+                        style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                       ),
                     ],
                   ),
@@ -524,14 +500,16 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
                 backgroundColor: _isTeacher ? Colors.blueAccent : Colors.lightBlueAccent,
                 foregroundColor: Colors.white,
               ),
+
               floatingActionButton: !_isTeacher
                   ? FloatingActionButton(
                 onPressed: () => _showCreateSubmissionDialog(l10n),
                 backgroundColor: Colors.lightBlueAccent,
                 foregroundColor: Colors.white,
-                child: const Icon(Icons.add),
+                child: const Text("+"),
               )
                   : null,
+
               body: isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : RefreshIndicator(
@@ -543,15 +521,16 @@ class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
                     const SizedBox(height: 16),
                     _buildFilesSection(l10n),
                     const SizedBox(height: 16),
+
                     Text(
                       l10n.submissions,
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
+
                     const SizedBox(height: 12),
+
                     if (submissions.isEmpty)
-                      Center(
-                        child: Text(l10n.noSubmissionsRegistered),
-                      )
+                      Center(child: Text(l10n.noSubmissionsRegistered))
                     else
                       ...submissions.map((s) => _buildSubmissionCard(s, l10n)).toList(),
                   ],
