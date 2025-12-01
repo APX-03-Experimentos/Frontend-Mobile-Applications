@@ -1,11 +1,15 @@
 // course_statistics_view.dart
 import 'package:flutter/material.dart';
+import 'package:learnhive_mobile/courses/views/pie_chart_view.dart';
+import 'package:learnhive_mobile/courses/views/radar_chart_view.dart';
 import 'package:provider/provider.dart';
 import 'package:learnhive_mobile/courses/model/course.dart';
 import 'package:learnhive_mobile/assignments/viewmodels/assignment_viewmodel.dart';
 import '../../assignments/viewmodels/submission_viewmodel.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/locale_provider.dart';
+import 'bar_chart_view.dart';
+import 'line_chart_view.dart';
 
 class CourseStatisticsView extends StatefulWidget {
   final Course course;
@@ -88,11 +92,101 @@ class _CourseStatisticsViewState extends State<CourseStatisticsView> {
                 _buildGradeDistribution(stats['gradeDistribution'], appLocalizations), // ✅ PASAR TRADUCCIONES
                 const SizedBox(height: 20),
                 _buildSubmissionsChart(stats['submissionsPerAssignment'], appLocalizations), // ✅ PASAR TRADUCCIONES
+
+                const SizedBox(height: 20),
+                Text(
+                  appLocalizations.chooseChart, // ✅ TRADUCIDO "Elige un gráfico"
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 2.5,
+                  children: [
+                    _buildChartButton(
+                      appLocalizations.pieChart, // ✅ TRADUCIDO
+                      Icons.pie_chart,
+                          () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PieChartView(
+                            gradeDistribution: stats['gradeDistribution'],
+                            courseTitle: widget.course.title,
+                          ),
+                        ),
+                      ),
+                    ),
+                    _buildChartButton(
+                      appLocalizations.barChart, // ✅ TRADUCIDO
+                      Icons.bar_chart,
+                          () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BarChartView(
+                            submissionsPerAssignment: stats['submissionsPerAssignment'],
+                            courseTitle: widget.course.title,
+                          ),
+                        ),
+                      ),
+                    ),
+                    _buildChartButton(
+                      appLocalizations.lineChart, // ✅ TRADUCIDO
+                      Icons.show_chart,
+                          () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => LineChartView(
+                            assignments: _assignmentVm.assignments,
+                            submissions: _submissionVm.submissions,
+                            courseTitle: widget.course.title,
+                          ),
+                        ),
+                      ),
+                    ),
+                    _buildChartButton(
+                      appLocalizations.radarChart, // ✅ TRADUCIDO
+                      Icons.multiline_chart,
+                          () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => RadarChartView(
+                            submissions: _submissionVm.submissions,  // Todas las submissions
+                            assignments: _assignmentVm.assignments,  // Todas las assignments
+                            courseTitle: widget.course.title,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildChartButton(String title, IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Card(
+        elevation: 2,
+        child: Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: Colors.purple),
+              const SizedBox(width: 8),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -214,10 +308,10 @@ class _CourseStatisticsViewState extends State<CourseStatisticsView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-            appLocalizations.gradeDistribution, // ✅ TRADUCIDO
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+              appLocalizations.gradeDistribution, // ✅ TRADUCIDO
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 16),
@@ -324,6 +418,4 @@ class _CourseStatisticsViewState extends State<CourseStatisticsView> {
       ),
     );
   }
-
-
 }

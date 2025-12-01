@@ -41,7 +41,7 @@ class AppLocalizations {
       'language_description': 'Change app language',
       'information': 'Information',
 
-      // ✅ NUEVAS PARA COURSE_STATISTICS_VIEW
+      // NUEVAS PARA COURSE_STATISTICS_VIEW
       'statistics': 'Statistics',
       'total_assignments': 'Total Assignments',
       'total_submissions': 'Total Submissions',
@@ -50,8 +50,13 @@ class AppLocalizations {
       'grade_distribution': 'Grade Distribution',
       'submissions_per_assignment': 'Submissions per Assignment',
       'no_submissions': 'No submissions',
+      'choose_chart': 'Choose a Chart',
+      'pie_chart': 'Pie Chart',
+      'bar_chart': 'Bar Chart',
+      'line_chart': 'Line Chart',
+      'radar_chart': 'Radar Chart',
 
-      // ✅ NUEVAS PARA COURSE_USERS_VIEW
+      // NUEVAS PARA COURSE_USERS_VIEW
       'users': 'Users',
       'professor': 'Professor',
       'students': 'Students',
@@ -64,7 +69,7 @@ class AppLocalizations {
       'refresh': 'Refresh',
       'cancel': 'Cancel',
 
-      // ✅ NUEVAS PARA COURSES_VIEW
+      // NUEVAS PARA COURSES_VIEW
       'my_courses': 'My Courses',
       'members': 'Members',
       'configuration': 'Configuration',
@@ -134,6 +139,40 @@ class AppLocalizations {
       'submission_graded': 'Submission graded',
       'no_files_uploaded': 'No files uploaded',
       'score': 'Score',
+      // Bar Chart
+      'delivery_singular': '{count} delivery',  // "1 entrega"
+      'delivery_plural': '{count} deliveries',  // "X entregas"
+      'max_deliveries': 'Maximum',
+      'min_deliveries': 'Minimum',
+      'more_deliveries': 'More deliveries',
+      'selected': 'Selected',
+      'legend': 'Legend',
+      //Pie Chart
+      'grade_distribution_chart': 'Grade Distribution',
+      'no_grades_to_display': 'No grades to display',
+      'distribution_summary': 'Distribution Summary',
+      'total': 'Total',
+      'most_common_range': 'Most Common Range',
+      'least_common_range': 'Least Common Range',
+      'range_17_20': '17-20',
+      'range_14_16': '14-16',
+      'range_0_13': '0-13',
+      // Para Line Chart
+      'maximum': 'Maximum',
+      'minimum': 'Minimum',
+      'main_line': 'Main line',
+      'data_points': 'Data points',
+      // PARA RADAR CHART - NUEVAS TRADUCCIONES
+      'course_summary': 'Course Summary',
+      'delivery_rate': 'Delivery Rate',
+      'average_quality': 'Average Quality',
+      'completeness': 'Completeness',
+      'consistency': 'Consistency',
+      'participation': 'Participation', // Corregí "participacion" a "participation"
+      'efficiency': 'Efficiency',
+      'performance_indicators': 'Performance Indicators',
+      'submission_rate': 'Submission Rate', // Esto ya existe en tu código original
+
     },
     'es': {
       // TRADUCCIONES BÁSICAS EXISTENTES
@@ -161,7 +200,7 @@ class AppLocalizations {
       'language_description': 'Cambiar el idioma de la aplicación',
       'information': 'Información',
 
-      // ✅ NUEVAS PARA COURSE_STATISTICS_VIEW
+      // NUEVAS PARA COURSE_STATISTICS_VIEW
       'statistics': 'Estadísticas',
       'total_assignments': 'Total de Tareas',
       'total_submissions': 'Total de Entregas',
@@ -170,8 +209,13 @@ class AppLocalizations {
       'grade_distribution': 'Distribución de Calificaciones',
       'submissions_per_assignment': 'Entregas por Tarea',
       'no_submissions': 'No hay entregas',
+      'choose_chart': 'Elige un gráfico',
+      'pie_chart': 'Gráfico Circular',
+      'bar_chart': 'Gráfico de Barras',
+      'line_chart': 'Gráfico de Líneas',
+      'radar_chart': 'Gráfico de Radar',
 
-      // ✅ NUEVAS PARA COURSE_USERS_VIEW
+      // NUEVAS PARA COURSE_USERS_VIEW
       'users': 'Usuarios',
       'professor': 'Profesor',
       'students': 'Alumnos',
@@ -184,7 +228,7 @@ class AppLocalizations {
       'refresh': 'Actualizar',
       'cancel': 'Cancelar',
 
-      // ✅ NUEVAS PARA COURSES_VIEW
+      // NUEVAS PARA COURSES_VIEW
       'my_courses': 'Mis Cursos',
       'members': 'Miembros',
       'configuration': 'Configuración',
@@ -254,6 +298,39 @@ class AppLocalizations {
       'submission_graded': 'Entrega calificada',
       'no_files_uploaded': 'No hay archivos subidos',
       'score': 'Puntaje',
+      // Bar Chart
+      'delivery_singular': '{count} entrega',
+      'delivery_plural': '{count} entregas',
+      'max_deliveries': 'Máxima',
+      'min_deliveries': 'Mínima',
+      'more_deliveries': 'Más entregas',
+      'selected': 'Seleccionado',
+      'legend': 'Leyenda',
+      // Pie Cahrt
+      'grade_distribution_chart': 'Distribución de Calificaciones',
+      'no_grades_to_display': 'No hay calificaciones para mostrar',
+      'distribution_summary': 'Resumen de Distribución',
+      'total': 'Total',
+      'most_common_range': 'Rango Más Común',
+      'least_common_range': 'Rango Menos Común',
+      'range_17_20': '17-20',
+      'range_14_16': '14-16',
+      'range_0_13': '0-13',
+      // Para Line Chart
+      'maximum': 'Máxima',
+      'minimum': 'Mínima',
+      'main_line': 'Línea principal',
+      'data_points': 'Puntos de datos',
+      // PARA RADAR CHART - NUEVAS TRADUCCIONES
+      'course_summary': 'Resumen del Curso',
+      'delivery_rate': 'Tasa de Entrega',
+      'average_quality': 'Calidad Promedio',
+      'completeness': 'Completitud',
+      'consistency': 'Consistencia',
+      'participation': 'Participación', // Corregí "participacion" a "participación"
+      'efficiency': 'Eficiencia',
+      'performance_indicators': 'Indicadores de Rendimiento',
+      'submission_rate': 'Tasa de Entrega', // Esto ya existe en tu código original
     },
   };
 
@@ -304,6 +381,11 @@ class AppLocalizations {
   String get gradeDistribution => _translate('grade_distribution');
   String get submissionsPerAssignment => _translate('submissions_per_assignment');
   String get noSubmissions => _translate('no_submissions');
+  String get chooseChart => _translate('choose_chart');
+  String get pieChart => _translate('pie_chart');
+  String get barChart => _translate('bar_chart');
+  String get lineChart => _translate('line_chart');
+  String get radarChart => _translate('radar_chart');
 
   // NUEVOS GETTERS PARA COURSE_USERS_VIEW
   String get users => _translate('users');
@@ -386,6 +468,41 @@ class AppLocalizations {
   String get noFilesUploaded => _translate('no_files_uploaded');
   String get score => _translate('score');
 
+  // Para Bar Chart
+  String get maxDeliveries => _translate('max_deliveries');
+  String get minDeliveries => _translate('min_deliveries');
+  String get moreDeliveries => _translate('more_deliveries');
+  String get selected => _translate('selected');
+  String get legend => _translate('legend');  // Si agregaste esta traducción
+
+  // Para Pie Chart
+  String get gradeDistributionChart => _translate('grade_distribution_chart');
+  String get noGradesToDisplay => _translate('no_grades_to_display');
+  String get distributionSummary => _translate('distribution_summary');
+  String get total => _translate('total');
+  String get mostCommonRange => _translate('most_common_range');
+  String get leastCommonRange => _translate('least_common_range');
+  String get range1720 => _translate('range_17_20');
+  String get range1416 => _translate('range_14_16');
+  String get range013 => _translate('range_0_13');
+
+  // Line Chart
+  String get maximum => _translate('maximum');
+  String get minimum => _translate('minimum');
+  String get mainLine => _translate('main_line');
+  String get dataPoints => _translate('data_points');
+
+  // NUEVOS GETTERS PARA RADAR CHART
+  String get courseSummary => _translate('course_summary');
+  String get deliveryRate => _translate('delivery_rate');
+  String get averageQuality => _translate('average_quality');
+  String get completeness => _translate('completeness');
+  String get consistency => _translate('consistency');
+  String get participation => _translate('participation');
+  String get efficiency => _translate('efficiency');
+  String get performanceIndicators => _translate('performance_indicators');
+  String get submissionRate => _translate('submission_rate');
+
   // Métodos con parámetros
   String removeStudentConfirmation(String username) {
     return translateWithParams('remove_student_confirmation', {'username': username});
@@ -393,6 +510,15 @@ class AppLocalizations {
 
   String studentRemoved(String username) {
     return translateWithParams('student_removed', {'username': username});
+  }
+
+  // Nuevos getters para bar chart
+  String deliverySingular(String count) {
+    return translateWithParams('delivery_singular', {'count': count});
+  }
+
+  String deliveryPlural(String count) {
+    return translateWithParams('delivery_plural', {'count': count});
   }
 
   // CoursesView
