@@ -50,10 +50,8 @@ class WebSocketService {
 
       await disconnect();
 
-      debugPrint('🌐 [WebSocketService] Conectando a: ws://10.0.2.2:8080/ws-notifications?token=$token&userId=$userId');
-
       _channel = WebSocketChannel.connect(
-        Uri.parse('ws://10.0.2.2:8080/ws-notifications?token=$token&userId=$userId'),
+        Uri.parse('wss://backend-web-services-1.onrender.com/ws-notifications?token=$token&userId=$userId'),
       );
 
       _isConnected = true;

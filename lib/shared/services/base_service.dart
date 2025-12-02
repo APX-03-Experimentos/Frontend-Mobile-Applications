@@ -1,6 +1,6 @@
 class BaseService {
 
-  final String baseUrl = "http://10.0.2.2:8080/api/v1/";
+  final String baseUrl = "https://backend-web-services-1.onrender.com/api/v1/";
 
   final String endpoint;
 
