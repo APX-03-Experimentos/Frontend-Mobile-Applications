@@ -4,13 +4,13 @@ import 'package:learnhive_mobile/assignments/model/assignment.dart';
 
 import '../services/assignment_service.dart';
 
-class AssignmentViewModel extends ChangeNotifier{
+class AssignmentViewModel extends ChangeNotifier {
   final _assignmentService = AssignmentService();
 
   Assignment? _assignment;
   bool _isLoading = false;
   String? _error;
-  List<Assignment> _assignments = []; // ← Para listas de assignments
+  List<Assignment> _assignments = [];
 
   Assignment? get assignment => _assignment;
   bool get isLoading => _isLoading;
@@ -20,12 +20,25 @@ class AssignmentViewModel extends ChangeNotifier{
   List<String> _files = [];
   List<String> get files => _files;
 
+  // ✅ AGREGAR ESTE MÉTODO para limpiar las asignaciones
+  void clearAssignments() {
+    _assignments = [];
+    notifyListeners();
+    debugPrint('🧹 [AssignmentViewModel] Assignments limpiados');
+  }
+
   //createAssignment
   Future<Assignment?> createAssignment(String title,String description,int courseId,DateTime deadline,String imageUrl) async{
     _setLoading(true);
     try {
       _assignment = await _assignmentService.createAssignment(title,description,courseId,deadline,imageUrl);
       _error = null;
+
+      // ✅ Agregar la nueva asignación a la lista
+      if (_assignment != null) {
+        _assignments.add(_assignment!);
+        notifyListeners();
+      }
     } catch (e) {
       _error = e.toString();
     }
@@ -94,8 +107,10 @@ class AssignmentViewModel extends ChangeNotifier{
     try {
       _assignments = await _assignmentService.getAssignmentsByCourseId(courseId);
       _error = null;
+      debugPrint('📋 [AssignmentViewModel] Cargadas ${_assignments.length} asignaciones para curso $courseId');
     } catch (e) {
       _error = e.toString();
+      _assignments = []; // Limpiar en caso de error
     }
     _setLoading(false);
     return _assignments;

@@ -59,11 +59,11 @@ class SettingsView extends StatelessWidget {
               icon: Icons.info,
               children: [
                 _buildInfoItem(
-                  title: 'Versión',
+                  title: appLocalizations.version, // ✅ TRADUCIDO
                   value: '1.0.0',
                 ),
                 _buildInfoItem(
-                  title: 'Desarrollado por',
+                  title: appLocalizations.developedBy, // ✅ TRADUCIDO
                   value: 'LearnHive Team',
                 ),
               ],

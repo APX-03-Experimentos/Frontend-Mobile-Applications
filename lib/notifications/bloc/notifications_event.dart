@@ -21,10 +21,14 @@ class MarkNotificationAsReadEvent extends NotificationsEvent {
 
 // 🔗 EVENTOS DE WEBSOCKET
 class ConnectWebSocketEvent extends NotificationsEvent {}
-
 class DisconnectWebSocketEvent extends NotificationsEvent {}
-
 class NewNotificationReceivedEvent extends NotificationsEvent {
   final NotificationDataModel notification;
   NewNotificationReceivedEvent(this.notification);
+}
+
+// ✅ NUEVO EVENTO: Cuando el usuario inicia sesión
+class UserLoggedInEvent extends NotificationsEvent {
+  final int userId;
+  UserLoggedInEvent(this.userId);
 }

@@ -40,6 +40,11 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
 
   Future<void> _loadAssignments() async {
     final viewModel = context.read<AssignmentViewModel>();
+
+    // ✅ LIMPIAR asignaciones ANTES de cargar nuevas
+    viewModel.clearAssignments(); // Necesitarás agregar este método
+
+    // ✅ Cargar asignaciones del curso actual
     await viewModel.getAssignmentsByCourseId(widget.course.courseId);
   }
 
